@@ -1400,6 +1400,25 @@ tbody tr.link a {
   padding-left: 16px;
   color: var(--ink-2);
 }
+.checks .items.err {
+  color: var(--bad);
+}
+.checks .howto {
+  margin-top: 6px;
+}
+.checks .howto summary {
+  cursor: pointer;
+  color: var(--focus);
+  width: fit-content;
+}
+.checks .howto ol {
+  margin: 6px 0 4px;
+  padding-left: 20px;
+}
+.checks .howto li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
 
 /* ---------- Détail commande ---------- */
 .order-grid {

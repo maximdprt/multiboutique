@@ -35,6 +35,10 @@ export function Sidebar({ toHandle, running }: { toHandle: number; running: numb
           )}
         </a>
       ))}
+      <a className="bottom" href="/admin/reglages" aria-current={isCurrent("/admin/reglages") ? "page" : undefined}>
+        <Icon name="settings" />
+        Réglages
+      </a>
     </nav>
   );
 }
