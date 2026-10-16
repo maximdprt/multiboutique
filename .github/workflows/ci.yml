@@ -1,0 +1,61 @@
+# Vérifications automatiques à chaque envoi de code (push) et à chaque pull request.
+# Tout tourne en mode démo : aucun secret n'est nécessaire.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    name: Types, lint, build et tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installation
+        run: npm ci
+
+      - name: Vérification des types
+        run: npm run typecheck
+
+      - name: Vérification du code (ESLint)
+        run: npm run lint
+
+      - name: Tests unitaires
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Navigateur pour les tests de bout en bout
+        run: npx playwright install --with-deps chromium
+
+      - name: Tests de bout en bout (mode démo)
+        run: npm run test:e2e
+
+      - name: Rapport Playwright en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
