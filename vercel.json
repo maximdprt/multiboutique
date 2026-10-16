@@ -1,6 +1,20 @@
 {
   "crons": [
-    { "path": "/api/cron/veille", "schedule": "0 5 * * *" },
-    { "path": "/api/cron/contenu", "schedule": "0 6 * * 1" }
+    {
+      "path": "/api/cron/veille",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/suivi",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/rapport",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/contenu",
+      "schedule": "0 6 * * 1"
+    }
   ]
 }

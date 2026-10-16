@@ -1,5 +1,7 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { fulfillOrder } from "./fulfillment";
 import { db } from "./db";
 import { sendOrderConfirmation } from "./email";
 import type { Address, NewOrder, Order, OrderItem, Product, Site } from "./types";
@@ -33,6 +35,9 @@ export function toOrderItems(items: { product: Product; qty: number }[]): OrderI
     unit_price_cents: p.price_cents,
     unit_cost_cents: p.cost_cents,
     supplier_url: p.supplier_url,
+    supplier: p.supplier,
+    supplier_variant_id: p.supplier_variant_id ?? "",
+    supplier_country: p.supplier_country ?? "",
   }));
 }
 
@@ -80,5 +85,7 @@ export async function recordPaidOrder(
     console.error(e);
   }
   revalidatePath("/", "layout");
+  // envoi automatique au fournisseur, après la réponse (le client n'attend pas)
+  after(() => fulfillOrder(created.id).catch((e) => console.error("Envoi fournisseur :", e)));
   return created;
 }

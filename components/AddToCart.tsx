@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useCart, type CartItem } from "./cart";
+import { track } from "./track";
 
 export function AddToCart({ product }: { product: Omit<CartItem, "qty"> }) {
   const { add } = useCart();
@@ -28,6 +29,7 @@ export function AddToCart({ product }: { product: Omit<CartItem, "qty"> }) {
           onClick={() => {
             add(product, qty);
             setAdded(true);
+            track("add_to_cart");
           }}
         >
           {soldOut ? "Épuisé" : "Ajouter au panier"}

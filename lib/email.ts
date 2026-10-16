@@ -52,3 +52,27 @@ export async function sendShippingNotice(site: Site, o: Order) {
     layout(site, `<p>Bonne nouvelle : votre commande a été expédiée.</p><p>Numéro de suivi : <strong>${esc(o.tracking_number)}</strong></p>${link}`),
   );
 }
+
+/** Rapport quotidien au patron : e-mail (Resend) et/ou Telegram, tous deux gratuits et facultatifs. */
+export async function sendOwnerReport(subject: string, text: string) {
+  const to = process.env.REPORT_EMAIL;
+  const from = process.env.REPORT_FROM; // ex. "Rapports <rapport@votre-domaine.fr>" (domaine vérifié dans Resend)
+  if (process.env.RESEND_API_KEY && to && from) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to, subject, text }),
+    });
+    if (!res.ok) console.error("Rapport e-mail :", res.status, await res.text());
+  }
+  const bot = process.env.TELEGRAM_BOT_TOKEN;
+  const chat = process.env.TELEGRAM_CHAT_ID;
+  if (bot && chat) {
+    const res = await fetch(`https://api.telegram.org/bot${bot}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chat, text: `${subject}\n\n${text}`.slice(0, 4000), disable_web_page_preview: true }),
+    });
+    if (!res.ok) console.error("Rapport Telegram :", res.status, await res.text());
+  }
+}

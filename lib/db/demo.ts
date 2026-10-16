@@ -4,17 +4,27 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
-import type { AgentRun, Guide, NewOrder, Opportunity, Order, Product, Site } from "../types";
+import type { AgentRun, AnalyticsDay, Guide, NewOrder, Opportunity, Order, Product, Report, Site, TrackInput } from "../types";
 import type { Db, OrderFilter } from "./types";
-import { DEMO_GUIDES, DEMO_OPPORTUNITIES, DEMO_PRODUCTS, DEMO_SITES, generateDemoOrders } from "./seed";
+import { DEMO_GUIDES, DEMO_OPPORTUNITIES, DEMO_PRODUCTS, DEMO_SITES, generateDemoAnalytics, generateDemoOrders } from "./seed";
 
-type State = { sites: Site[]; products: Product[]; guides: Guide[]; orders: Order[]; opportunities: Opportunity[]; runs: AgentRun[] };
+type State = {
+  sites: Site[];
+  products: Product[];
+  guides: Guide[];
+  orders: Order[];
+  opportunities: Opportunity[];
+  runs: AgentRun[];
+  analytics: AnalyticsDay[];
+  reports: Report[];
+  settings: Record<string, unknown>;
+};
 
 const FILE =
   process.env.DEMO_DB_PATH ||
   (process.env.VERCEL ? path.join(os.tmpdir(), "demo-db.json") : path.join(process.cwd(), ".data", "demo-db.json"));
 
-const g = globalThis as unknown as { __demoState?: State };
+const g = globalThis as unknown as { __demoState?: State; __demoVisitors?: Set<string> };
 
 function load(): State {
   if (g.__demoState) return g.__demoState;
@@ -22,6 +32,9 @@ function load(): State {
     g.__demoState = JSON.parse(fs.readFileSync(FILE, "utf8")) as State;
     // fichier créé par une version précédente
     g.__demoState.opportunities ??= structuredClone(DEMO_OPPORTUNITIES);
+    g.__demoState.analytics ??= generateDemoAnalytics(g.__demoState.orders);
+    g.__demoState.reports ??= [];
+    g.__demoState.settings ??= {};
     g.__demoState.runs ??= [];
   } catch {
     const orders = generateDemoOrders();
@@ -32,6 +45,9 @@ function load(): State {
       orders,
       opportunities: structuredClone(DEMO_OPPORTUNITIES),
       runs: [],
+      analytics: generateDemoAnalytics(orders),
+      reports: [],
+      settings: {},
     };
     persist();
   }
@@ -218,6 +234,54 @@ export const demoDb: Db = {
   },
   async listRuns(limit = 30) {
     return clone([...load().runs].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, limit));
+  },
+  async trackEvent(e: TrackInput) {
+    const st = load();
+    let d = st.analytics.find((x) => x.site_id === e.site_id && x.day === e.day);
+    if (!d) {
+      d = { site_id: e.site_id, day: e.day, pageviews: 0, sessions: 0, visitors: 0, add_to_cart: 0, checkouts: 0, sources: {}, devices: {}, countries: {}, pages: {} };
+      st.analytics.push(d);
+    }
+    const inc = (c: Record<string, number>, k: string) => (c[k] = (c[k] ?? 0) + 1);
+    if (e.type === "pageview") {
+      d.pageviews++;
+      g.__demoVisitors ??= new Set();
+      const key = `${e.site_id}|${e.day}|${e.visitor}`;
+      if (!g.__demoVisitors.has(key)) {
+        g.__demoVisitors.add(key);
+        d.visitors++;
+      }
+      inc(d.pages, e.path);
+      if (e.entry) {
+        d.sessions++;
+        inc(d.sources, e.source);
+        inc(d.devices, e.device);
+        inc(d.countries, e.country);
+      }
+    } else if (e.type === "add_to_cart") d.add_to_cart++;
+    else d.checkouts++;
+    persistSoon();
+  },
+  async analyticsDays({ siteId, since, until }) {
+    return clone(load().analytics.filter((d) => (!siteId || d.site_id === siteId) && d.day >= since && d.day <= until));
+  },
+  async saveReport(r) {
+    const st = load();
+    st.reports = st.reports.filter((x) => x.day !== r.day);
+    const report: Report = { ...r, id: crypto.randomUUID(), created_at: now() };
+    st.reports.push(report);
+    persist();
+    return clone(report);
+  },
+  async listReports(limit = 30) {
+    return clone([...load().reports].sort((a, b) => b.day.localeCompare(a.day)).slice(0, limit));
+  },
+  async getSetting<T>(key: string) {
+    return clone((load().settings[key] as T) ?? null);
+  },
+  async setSetting(key, value) {
+    load().settings[key] = value;
+    persist();
   },
   async updateOrder(id, patch) {
     const st = load();

@@ -1,6 +1,7 @@
 // Données de démonstration : deux boutiques, leurs produits, leurs guides
 // et ~4 mois de commandes générées, pour voir l'admin "vivant" dès le premier lancement.
-import type { Guide, Opportunity, Order, OrderItem, Product, Site } from "../types";
+import type { AnalyticsDay, Guide, Opportunity, Order, OrderItem, Product, Site } from "../types";
+import { dayKeyOf } from "../dates";
 
 const NOW = Date.now();
 const iso = (msAgo: number) => new Date(NOW - msAgo).toISOString();
@@ -676,3 +677,84 @@ export const DEMO_OPPORTUNITIES: Opportunity[] = [
     5,
   ),
 ];
+
+// ---------- Audience générée (cohérente avec les commandes) ----------
+function spread(r: () => number, weights: [string, number][], total: number) {
+  const out: Record<string, number> = {};
+  const w = weights.map(([k, v]) => [k, v * (0.75 + r() * 0.5)] as [string, number]);
+  const sum = w.reduce((s, [, v]) => s + v, 0);
+  let left = total;
+  w.forEach(([k, v], i) => {
+    const n = i === w.length - 1 ? left : Math.min(left, Math.round((v / sum) * total));
+    if (n > 0) out[k] = n;
+    left -= n;
+  });
+  return out;
+}
+
+export function generateDemoAnalytics(orders: Order[]): AnalyticsDay[] {
+  const r = rng(7);
+  const perDay = new Map<string, number>();
+  for (const o of orders) {
+    const k = `${o.site_id}|${dayKeyOf(o.created_at)}`;
+    perDay.set(k, (perDay.get(k) ?? 0) + 1);
+  }
+  const out: AnalyticsDay[] = [];
+  for (const site of DEMO_SITES) {
+    const products = DEMO_PRODUCTS.filter((p) => p.site_id === site.id);
+    const guides = DEMO_GUIDES.filter((g) => g.site_id === site.id);
+    const total = Math.floor((NOW - Date.parse(site.created_at)) / DAY);
+    for (let d = total; d >= 0; d--) {
+      const day = dayKeyOf(NOW - d * DAY);
+      const progress = 1 - d / total;
+      const n = perDay.get(`${site.id}|${day}`) ?? 0;
+      const sessions = Math.max(12, Math.round(n / (0.017 + r() * 0.012) + (r() - 0.5) * 20 + 15 * progress));
+      const pageviews = Math.round(sessions * (2.3 + r() * 0.8));
+      const checkouts = Math.max(n, Math.round(sessions * (0.028 + r() * 0.012)));
+      const ai = 0.03 + 0.11 * progress;
+      out.push({
+        site_id: site.id,
+        day,
+        sessions,
+        visitors: Math.round(sessions * (0.86 + r() * 0.06)),
+        pageviews,
+        checkouts,
+        add_to_cart: Math.max(checkouts, Math.round(sessions * (0.065 + r() * 0.03))),
+        sources: spread(
+          r,
+          (
+            [
+              ["Google", 0.36 + 0.08 * progress],
+              ["Direct", 0.2],
+              ["Instagram", site.id === "chat" ? 0.12 : 0.06],
+              ["TikTok", site.id === "chat" ? 0.08 : 0.03],
+              ["Pinterest", site.id === "bocal" ? 0.1 : 0.03],
+              ["Facebook", 0.04],
+              ["Bing", 0.035],
+              ["ChatGPT", ai * 0.6],
+              ["Perplexity", ai * 0.2],
+              ["Gemini", ai * 0.1],
+              ["Claude", ai * 0.07],
+              ["Copilot", ai * 0.03],
+            ] as [string, number][]
+          ),
+          sessions,
+        ),
+        devices: spread(r, [["Mobile", 0.67], ["Ordinateur", 0.28], ["Tablette", 0.05]], sessions),
+        countries: spread(r, [["FR", 0.86], ["BE", 0.07], ["CH", 0.03], ["LU", 0.015], ["CA", 0.01]], sessions),
+        pages: spread(
+          r,
+          [
+            ["/", 0.24],
+            ["/produits", 0.12],
+            ...products.map((p, i) => [`/produits/${p.slug}`, 0.1 / (1 + i * 0.35)] as [string, number]),
+            ...guides.map((g) => [`/guides/${g.slug}`, 0.03 + 0.06 * progress] as [string, number]),
+            ["/panier", 0.05],
+          ],
+          pageviews,
+        ),
+      });
+    }
+  }
+  return out;
+}

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { siteColors } from "@/lib/admin";
 import { dateTime, money } from "@/lib/format";
 import { ORDER_STATUS_LABEL } from "@/lib/types";
-import { refundOrder, updateOrder } from "../../../actions";
+import { refundOrder, sendToSupplier, updateOrder } from "../../../actions";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string }> };
 
@@ -39,7 +39,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
           </p>
         </div>
       </div>
-      {ok && <p className="flash">{ok === "rembourse" ? "Commande remboursée." : "Commande mise à jour."}</p>}
+      {ok && <p className="flash">{ok === "rembourse" ? "Commande remboursée." : ok === "fournisseur" ? "Envoi au fournisseur traité : voir le cadre Fournisseur." : "Commande mise à jour."}</p>}
 
       <div className="order-grid">
         <div className="stack">
@@ -180,6 +180,45 @@ export default async function OrderPage({ params, searchParams }: Props) {
               <p style={{ marginTop: 12 }}>
                 <a href={`/admin/commandes?q=${encodeURIComponent(o.email)}`}>Voir toutes ses commandes</a>
               </p>
+            </div>
+          </section>
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Fournisseur</h2>
+            </div>
+            <div className="panel-body">
+              {o.supplier_order_id ? (
+                <dl className="kv">
+                  <div>
+                    <dt>Commande fournisseur</dt>
+                    <dd>{o.supplier_order_id}</dd>
+                  </div>
+                  <div>
+                    <dt>Envoi</dt>
+                    <dd>{o.supplier_status === "auto" ? "Automatique" : "Manuel"}</dd>
+                  </div>
+                  {o.supplier_note && (
+                    <div>
+                      <dt>Note</dt>
+                      <dd>{o.supplier_note}</dd>
+                    </div>
+                  )}
+                </dl>
+              ) : (
+                <>
+                  <p className={o.supplier_status === "erreur" ? "err" : "muted"}>
+                    {o.supplier_note || (o.status === "paid" ? "Pas encore transmise au fournisseur." : "Aucun envoi fournisseur enregistré.")}
+                  </p>
+                  {o.status === "paid" && (
+                    <form action={sendToSupplier} style={{ marginTop: 12 }}>
+                      <input type="hidden" name="id" value={o.id} />
+                      <button className="btn small" type="submit">
+                        {o.supplier_status === "approbation" ? "Approuver et envoyer au fournisseur" : "Envoyer au fournisseur"}
+                      </button>
+                    </form>
+                  )}
+                </>
+              )}
             </div>
           </section>
           <section className="panel">

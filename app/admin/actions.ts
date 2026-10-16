@@ -7,6 +7,8 @@ import { parseEuros, slugify } from "@/lib/format";
 import { getStripe } from "@/lib/stripe";
 import { sendShippingNotice } from "@/lib/email";
 import { pingIndexNow } from "@/lib/indexnow";
+import { fulfillOrder, syncTracking } from "@/lib/fulfillment";
+import { buildDailyReport } from "@/lib/report";
 import { siteUrl } from "@/lib/sites";
 import type { OrderStatus, QA, Site, Spec } from "@/lib/types";
 
@@ -66,6 +68,8 @@ export async function saveProduct(f: FormData) {
     brand: str(f, "brand"),
     supplier: str(f, "supplier"),
     supplier_url: str(f, "supplier_url"),
+    supplier_variant_id: str(f, "supplier_variant_id"),
+    supplier_country: str(f, "supplier_country").toUpperCase().slice(0, 2),
     seo_title: str(f, "seo_title"),
     seo_description: str(f, "seo_description"),
     active: f.get("active") === "on",
@@ -204,4 +208,27 @@ export async function refundOrder(f: FormData) {
   for (const i of order.items) await db.adjustStock(i.product_id, i.quantity);
   refresh();
   redirect(`/admin/commandes/${id}?ok=rembourse`);
+}
+
+// ---------- Fournisseur ----------
+export async function sendToSupplier(f: FormData) {
+  await requireAdmin();
+  const id = str(f, "id");
+  await fulfillOrder(id, true);
+  redirect(`/admin/commandes/${id}?ok=fournisseur`);
+}
+
+export async function syncTrackingNow() {
+  await requireAdmin();
+  await syncTracking();
+  redirect("/admin/commandes?ok=suivi");
+}
+
+// ---------- Rapport ----------
+export async function regenerateReport() {
+  await requireAdmin();
+  // recalcul sans renvoyer l'e-mail
+  await db.saveReport(await buildDailyReport());
+  revalidatePath("/admin");
+  redirect("/admin");
 }

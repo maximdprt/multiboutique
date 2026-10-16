@@ -2,7 +2,7 @@
 // SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont définies.
 // La clé "service role" reste côté serveur : elle n'est jamais envoyée au navigateur.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { AgentRun, Guide, NewOrder, Opportunity, Order, Product, Site } from "../types";
+import type { AgentRun, AnalyticsDay, Guide, NewOrder, Opportunity, Order, Product, Report, Site, TrackInput } from "../types";
 import type { Db } from "./types";
 
 let client: SupabaseClient | null = null;
@@ -136,6 +136,40 @@ export const supabaseDb: Db = {
   },
   async listRuns(limit = 30) {
     return check(await sb().from("agent_runs").select("*").order("created_at", { ascending: false }).limit(limit)) as AgentRun[];
+  },
+  async trackEvent(e: TrackInput) {
+    // fonction SQL atomique (supabase/schema.sql)
+    check(
+      await sb().rpc("track_event", {
+        p_site: e.site_id,
+        p_day: e.day,
+        p_type: e.type,
+        p_path: e.path,
+        p_source: e.source,
+        p_device: e.device,
+        p_country: e.country,
+        p_hash: e.visitor,
+        p_entry: e.entry,
+      }),
+    );
+  },
+  async analyticsDays({ siteId, since, until }) {
+    let q = sb().from("analytics_daily").select("*").gte("day", since).lte("day", until).order("day").limit(10000);
+    if (siteId) q = q.eq("site_id", siteId);
+    return check(await q) as AnalyticsDay[];
+  },
+  async saveReport(r) {
+    return check(await sb().from("reports").upsert(r, { onConflict: "day" }).select().single()) as Report;
+  },
+  async listReports(limit = 30) {
+    return check(await sb().from("reports").select("*").order("day", { ascending: false }).limit(limit)) as Report[];
+  },
+  async getSetting<T>(key: string) {
+    const row = check(await sb().from("settings").select("value").eq("key", key).maybeSingle()) as { value: T } | null;
+    return row?.value ?? null;
+  },
+  async setSetting(key, value) {
+    check(await sb().from("settings").upsert({ key, value, updated_at: new Date().toISOString() }));
   },
   async updateOrder(id, patch) {
     const { id: _ignore, number: _n, ...rest } = patch;

@@ -112,7 +112,9 @@ ${s.name}, et les prestataires nécessaires à la commande : Stripe (paiement), 
 
 ## Cookies
 
-Ce site n'utilise aucun cookie publicitaire ni de mesure d'audience. Votre panier est mémorisé dans votre navigateur, uniquement pour vous éviter de le perdre.
+Ce site n'utilise aucun cookie publicitaire. Votre panier est mémorisé dans votre navigateur, uniquement pour vous éviter de le perdre.
+
+La fréquentation est mesurée sans cookie et sans conserver votre adresse IP : nous comptons les pages vues et la provenance des visites (moteur de recherche, réseau social, assistant IA…) sous forme de totaux anonymes par jour.
 
 ## Vos droits
 

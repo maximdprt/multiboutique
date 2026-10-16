@@ -56,7 +56,9 @@ export default async function Shops() {
                       <span className="cell-site">
                         <i className="dot" style={{ background: colors[s.id] }} />
                         <span>
-                          <b>{s.name}</b>{" "}
+                          <a href={`/admin/boutiques/${s.id}/apercu`} style={{ textDecoration: "none" }}>
+                            <b>{s.name}</b>
+                          </a>{" "}
                           {!s.active && <span className="pill">hors ligne</span>}
                           <a className="link-blue" href={siteUrl(s)} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: "0.86rem" }}>
                             {s.domain}
@@ -76,6 +78,9 @@ export default async function Shops() {
                     <td className="num">{guides.filter((g) => g.site_id === s.id && g.published).length}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       <span style={{ display: "inline-flex", gap: 14 }}>
+                      <a className="link-blue" href={`/admin/boutiques/${s.id}/apercu`}>
+                        Analyse
+                      </a>
                       <a className="link-blue" href={`/admin/produits${qs({ site: s.id })}`}>
                         Produits
                       </a>

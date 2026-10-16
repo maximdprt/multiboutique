@@ -51,3 +51,10 @@ export async function runStatus(id: string): Promise<AgentRun | null> {
   await requireAdmin();
   return db.getRun(id);
 }
+
+/** Instantané pour la ville 3D (rafraîchi régulièrement par la page). */
+export async function qgSnapshot() {
+  await requireAdmin();
+  const { qgSnapshotData } = await import("@/lib/qg");
+  return qgSnapshotData();
+}

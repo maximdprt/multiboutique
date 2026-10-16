@@ -1,4 +1,4 @@
-import type { AgentRun, Guide, NewOrder, Opportunity, Order, OrderStatus, Product, Site } from "../types";
+import type { AgentRun, AnalyticsDay, Guide, NewOrder, Opportunity, Order, OrderStatus, Product, Report, Site, TrackInput } from "../types";
 
 export type OrderFilter = {
   siteId?: string;
@@ -45,4 +45,14 @@ export interface Db {
   updateRun(id: string, patch: Partial<AgentRun>): Promise<void>;
   getRun(id: string): Promise<AgentRun | null>;
   listRuns(limit?: number): Promise<AgentRun[]>;
+
+  trackEvent(e: TrackInput): Promise<void>;
+  /** Jours compris entre since et until inclus (AAAA-MM-JJ). */
+  analyticsDays(opts: { siteId?: string; since: string; until: string }): Promise<AnalyticsDay[]>;
+
+  saveReport(r: Omit<Report, "id" | "created_at">): Promise<Report>;
+  listReports(limit?: number): Promise<Report[]>;
+
+  getSetting<T = unknown>(key: string): Promise<T | null>;
+  setSetting(key: string, value: unknown): Promise<void>;
 }

@@ -1,5 +1,6 @@
 // Icônes du menu (traits simples, 20 × 20).
 const P: Record<string, string> = {
+  city: "M3 17V9l4-2v10M7 17V5l5-2v14M12 17V8l5 2v7M2 17h16M9 7h1M9 10h1M9 13h1M14 12h1M14 14.5h1",
   home: "M3 9.5 10 4l7 5.5V16a1 1 0 0 1-1 1h-3.5v-5h-5v5H4a1 1 0 0 1-1-1z",
   orders: "M4 4h12l-1 12H5zM7.5 4V3.5a2.5 2.5 0 0 1 5 0V4M7 9h6",
   products: "M3.5 10.2 10.2 3.5H16.5v6.3l-6.7 6.7a1 1 0 0 1-1.4 0l-4.9-4.9a1 1 0 0 1 0-1.4zM13 7h.01",

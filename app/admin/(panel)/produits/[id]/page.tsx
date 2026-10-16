@@ -126,6 +126,16 @@ export default async function ProductEdit({ params, searchParams }: Props) {
               <span>Lien vers le produit chez le fournisseur</span>
               <input name="supplier_url" type="url" defaultValue={p?.supplier_url} placeholder="https://" />
             </label>
+            <label className="field">
+              <span>Identifiant de variante CJ (vid)</span>
+              <input name="supplier_variant_id" defaultValue={p?.supplier_variant_id ?? ""} placeholder="Pour l'envoi automatique des commandes" />
+              <small>Dans CJ : fiche produit, variante, « VID ». Sans lui, la commande reste à transmettre à la main.</small>
+            </label>
+            <label className="field">
+              <span>Pays de l&apos;entrepôt</span>
+              <input name="supplier_country" defaultValue={p?.supplier_country ?? ""} placeholder="CN, FR, DE…" maxLength={2} />
+              <small>Un entrepôt en Europe livre en quelques jours au lieu de 1 à 3 semaines.</small>
+            </label>
           </div>
         </div>
 

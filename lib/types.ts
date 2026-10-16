@@ -73,6 +73,10 @@ export type Product = {
   brand: string;
   supplier: string;
   supplier_url: string;
+  /** Identifiant de variante chez le fournisseur (CJ : "vid") : nécessaire pour la commande automatique */
+  supplier_variant_id?: string;
+  /** Pays de l'entrepôt d'expédition (CN, FR, DE…) */
+  supplier_country?: string;
   seo_title: string;
   seo_description: string;
   active: boolean;
@@ -121,6 +125,9 @@ export type OrderItem = {
   unit_price_cents: number;
   unit_cost_cents: number | null;
   supplier_url: string;
+  supplier?: string;
+  supplier_variant_id?: string;
+  supplier_country?: string;
 };
 
 export type Address = {
@@ -150,6 +157,11 @@ export type Order = {
   tracking_number: string;
   tracking_url: string;
   notes: string;
+  /** Commande passée chez le fournisseur */
+  supplier_order_id?: string | null;
+  /** auto = envoyée automatiquement ; approbation = au-dessus du seuil, attend votre clic ; erreur = voir supplier_note */
+  supplier_status?: "" | "auto" | "approbation" | "erreur" | "manuel";
+  supplier_note?: string;
   mode: "live" | "test" | "demo";
   created_at: string;
   updated_at: string;
@@ -179,7 +191,7 @@ export type Opportunity = {
   site_id: string | null;
 };
 
-export type AgentKind = "veille" | "construction" | "contenu";
+export type AgentKind = "veille" | "construction" | "contenu" | "commandes" | "rapport";
 
 export type AgentRun = {
   id: string;
@@ -191,4 +203,51 @@ export type AgentRun = {
   site_id: string | null;
   created_at: string;
   finished_at: string | null;
+};
+
+// ---------- Mesure d'audience (sans cookie) ----------
+export type Counter = Record<string, number>;
+
+export type AnalyticsDay = {
+  site_id: string;
+  day: string; // AAAA-MM-JJ
+  pageviews: number;
+  sessions: number;
+  visitors: number;
+  add_to_cart: number;
+  checkouts: number;
+  sources: Counter;
+  devices: Counter;
+  countries: Counter;
+  pages: Counter;
+};
+
+export type TrackInput = {
+  site_id: string;
+  day: string;
+  type: "pageview" | "add_to_cart" | "checkout";
+  path: string;
+  source: string;
+  device: string;
+  country: string;
+  visitor: string;
+  entry: boolean;
+};
+
+// ---------- Rapports ----------
+export type ReportLine = { label: string; value: string; trend?: number | null; href?: string };
+export type ReportTodo = { label: string; href: string; level: "urgent" | "normal" | "info" };
+export type Report = {
+  id: string;
+  day: string; // jour couvert (hier)
+  created_at: string;
+  headline: string; // "Hier : 412 € de CA, 11 commandes"
+  revenue_cents: number;
+  profit_cents: number;
+  orders: number;
+  sites: { site_id: string; name: string; revenue_cents: number; orders: number; sessions: number; trend: number | null }[];
+  todos: ReportTodo[];
+  alerts: string[];
+  agents: string[];
+  ideas: string[];
 };

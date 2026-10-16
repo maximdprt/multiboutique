@@ -6,6 +6,7 @@ import "@fontsource-variable/schibsted-grotesk";
 import "./store.css";
 import { siteFromHost, siteUrl } from "@/lib/sites";
 import { CartLink, CartProvider } from "@/components/cart";
+import { PageviewTracker } from "@/components/track";
 import { LEGAL_PAGES } from "./legal";
 
 type Props = { children: ReactNode; params: Promise<{ host: string }> };
@@ -57,6 +58,7 @@ export default async function StoreLayout({ children, params }: Props) {
     <html lang="fr" data-font={t.font} style={vars}>
       <body>
         <CartProvider siteId={site.id}>
+          <PageviewTracker />
           <a className="skip" href="#contenu">
             Aller au contenu
           </a>

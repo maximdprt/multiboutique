@@ -3,6 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "./cart";
 import { money } from "@/lib/format";
+import { track } from "./track";
 
 export function CartView({ flat, freeFrom }: { flat: number; freeFrom: number }) {
   const { items, ready, subtotal, setQty, remove } = useCart();
@@ -26,6 +27,7 @@ export function CartView({ flat, freeFrom }: { flat: number; freeFrom: number })
   async function checkout() {
     setBusy(true);
     setError("");
+    track("checkout");
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",

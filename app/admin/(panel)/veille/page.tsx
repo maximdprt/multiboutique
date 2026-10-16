@@ -4,13 +4,14 @@ import { date } from "@/lib/format";
 import { qs } from "@/lib/admin";
 import type { Opportunity } from "@/lib/types";
 import { launchVeille, setOpportunityStatus } from "../../agent-actions";
+import { CardStack } from "./CardStack";
 
 // les agents lancés depuis cette page peuvent travailler jusqu'à 5 minutes
 export const maxDuration = 300;
 
 export const metadata = { title: "Veille" };
 
-type Props = { searchParams: Promise<{ vue?: string }> };
+type Props = { searchParams: Promise<{ vue?: string; liste?: string }> };
 
 const VIEWS = [
   { id: "", name: "Nouvelles", test: (o: Opportunity) => o.status === "nouvelle" },
@@ -30,7 +31,9 @@ function host(url: string) {
 }
 
 export default async function Veille({ searchParams }: Props) {
-  const vue = (await searchParams).vue ?? "";
+  const sp = await searchParams;
+  const vue = sp.vue ?? "";
+  const asCards = vue === "" && !sp.liste;
   const view = VIEWS.find((v) => v.id === vue) ?? VIEWS[0];
   const [all, runs] = await Promise.all([db.listOpportunities(), db.listRuns(50)]);
   const list = all.filter(view.test).sort((a, b) => b.created_at.slice(0, 10).localeCompare(a.created_at.slice(0, 10)) || b.score - a.score);
@@ -71,7 +74,34 @@ export default async function Veille({ searchParams }: Props) {
         </nav>
       </section>
 
-      {list.length ? (
+      {asCards && list.length > 0 && (
+        <>
+          <CardStack
+            cards={list.map((o) => ({
+              id: o.id,
+              product: o.product,
+              niche: o.niche,
+              score: o.score,
+              summary: o.summary,
+              why_now: o.why_now,
+              competition: o.competition,
+              price_range: o.price_range,
+              margin_hint: o.margin_hint,
+              queries: o.queries,
+              links: [
+                ...o.examples.map((e) => ({ label: e.name, url: e.url, note: e.note })),
+                ...o.sources.map((u) => ({ label: host(u), url: u })),
+              ],
+            }))}
+          />
+          <p style={{ textAlign: "center", marginTop: 12 }}>
+            <a className="link-blue" href="/admin/veille?liste=1">
+              Voir toutes les idées en liste
+            </a>
+          </p>
+        </>
+      )}
+      {asCards && list.length > 0 ? null : list.length ? (
         <div className="opps">
           {list.map((o) => (
             <article key={o.id} className="panel opp">

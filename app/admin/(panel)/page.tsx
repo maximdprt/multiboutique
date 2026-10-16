@@ -1,116 +1,117 @@
 import { db } from "@/lib/db";
-import { adminContext, qs } from "@/lib/admin";
-import { bySite, change, dailySeries, isCounted, period, splitOrders, totals } from "@/lib/stats";
-import { dateTime, money, moneyRound, number } from "@/lib/format";
-import { ORDER_STATUS_LABEL, type Order } from "@/lib/types";
-import { BarChart } from "./BarChart";
-import { Delta, Metric, PERIOD_LABEL, PeriodSeg, SiteFilter, parseDays } from "./bits";
+import { siteColors } from "@/lib/admin";
+import { buildDailyReport } from "@/lib/report";
+import { dayKeyOf } from "@/lib/dates";
+import { moneyRound } from "@/lib/format";
+import { period, splitOrders, totals } from "@/lib/stats";
+import { regenerateReport } from "../actions";
+import { Delta } from "./bits";
 
-export const metadata = { title: "Ventes" };
+export const metadata = { title: "Aujourd'hui" };
 
-type Props = { searchParams: Promise<{ jours?: string; site?: string }> };
-
-/** Bénéfice estimé = ventes − prix d'achat fournisseur − frais Stripe (1,5 % + 0,25 € par paiement). */
-function profit(orders: Order[]) {
-  let p = 0;
-  for (const o of orders) {
-    if (!isCounted(o)) continue;
-    const cost = o.items.reduce((s, i) => s + (i.unit_cost_cents ?? 0) * i.quantity, 0);
-    p += o.total_cents - cost - Math.round(o.total_cents * 0.015 + 25);
-  }
-  return p;
-}
-
-export default async function Sales({ searchParams }: Props) {
-  const sp = await searchParams;
-  const days = parseDays(sp.jours, [1, 7, 30, 90, 365], 30);
-  const { sites, colors, current, siteId } = await adminContext(sp.site);
-  const p = period(days);
-  const orders = await db.listOrders({ siteId, since: p.fetchSince });
-  const { cur, prev } = splitOrders(orders, p);
-  const t = totals(cur);
-  const tp = totals(prev);
-  const gain = profit(cur);
-  const gainPrev = profit(prev);
-  const shown = current ? [current] : sites;
-  const points = dailySeries(cur, p, shown.map((s) => s.id));
-  const perSite = bySite(cur, prev, sites).sort((a, b) => b.revenue - a.revenue);
-  const siteName = Object.fromEntries(sites.map((s) => [s.id, s.name]));
-  const vs = days === 1 ? "hier" : "la période précédente";
+export default async function Today() {
+  const yesterday = dayKeyOf(Date.now() - 86_400_000);
+  const [reports, sites, todayOrders] = await Promise.all([db.listReports(14), db.listSites(), db.listOrders({ since: new Date(Date.now() - 2 * 86_400_000).toISOString() })]);
+  // Si la tâche du matin n'est pas encore passée, on calcule le rapport à la volée.
+  const report = reports.find((r) => r.day === yesterday) ?? { ...(await buildDailyReport()), id: "live", created_at: new Date().toISOString() };
+  const colors = siteColors(sites);
+  const p = period(1);
+  const today = totals(splitOrders(todayOrders, p).cur);
+  const greeting = new Date().toLocaleTimeString("fr-FR", { hour: "numeric", timeZone: "Europe/Paris" });
+  const hour = Number(greeting.replace(/\D/g, ""));
 
   return (
     <>
       <div className="page-head">
         <div>
-          <h1>Ventes</h1>
-          <p className="sub">
-            {PERIOD_LABEL[days]}, comparé à {vs}
-          </p>
+          <h1>{hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir"}</h1>
+          <p className="sub">{report.headline}</p>
         </div>
-        <PeriodSeg days={days} base={`/admin${qs({ site: siteId })}`} />
+        <div className="actions">
+          <form action={regenerateReport}>
+            <button className="btn quiet small" type="submit">
+              Recalculer le rapport
+            </button>
+          </form>
+        </div>
       </div>
-      <SiteFilter sites={sites} colors={colors} current={siteId} base="/admin" keep={{ jours: days }} />
 
       <section className="panel">
         <div className="money">
-          <Metric label="Chiffre d'affaires" value={moneyRound(t.revenue)} delta={<Delta v={change(t.revenue, tp.revenue)} />} />
-          <Metric
-            label="Bénéfice estimé"
-            hint="Ventes moins prix d'achat fournisseur et frais Stripe"
-            value={moneyRound(gain)}
-            delta={<Delta v={change(gain, gainPrev)} />}
-          />
-          <Metric label="Commandes" value={number(t.orders)} delta={<Delta v={change(t.orders, tp.orders)} />} />
-          <Metric label="Panier moyen" value={money(t.aov)} delta={<Delta v={change(t.aov, tp.aov)} />} />
-        </div>
-      </section>
-
-      <section className="panel gap">
-        <div className="panel-head">
-          <h2>Chiffre d&apos;affaires par jour</h2>
-          {shown.length > 1 && (
-            <div className="legend" aria-label="Légende">
-              {shown.map((s) => (
-                <span key={s.id}>
-                  <i className="dot" style={{ background: colors[s.id] }} />
-                  {s.name}
-                </span>
-              ))}
+          <div className="metric">
+            <span className="label">CA d&apos;hier</span>
+            <div className="row">
+              <span className="value">{moneyRound(report.revenue_cents)}</span>
             </div>
-          )}
-        </div>
-        <div className="panel-body">
-          <BarChart points={points} series={shown.map((s) => ({ id: s.id, name: s.name, color: colors[s.id] }))} label="Chiffre d'affaires par jour" />
+          </div>
+          <div className="metric">
+            <span className="label">Bénéfice estimé d&apos;hier</span>
+            <div className="row">
+              <span className="value">{moneyRound(report.profit_cents)}</span>
+            </div>
+          </div>
+          <div className="metric">
+            <span className="label">Commandes d&apos;hier</span>
+            <div className="row">
+              <span className="value">{report.orders}</span>
+            </div>
+          </div>
+          <div className="metric">
+            <span className="label">Aujourd&apos;hui pour l&apos;instant</span>
+            <div className="row">
+              <span className="value">{moneyRound(today.revenue)}</span>
+              <span className="delta">{today.orders} cmd</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {!current && sites.length > 1 && (
-        <section className="panel gap">
+      <div className="cols">
+        <section className="panel">
+          <div className="panel-head">
+            <h2>À faire</h2>
+            <span className="hint">{report.todos.length ? `${report.todos.length} point(s)` : "Rien d'urgent"}</span>
+          </div>
+          {report.todos.length ? (
+            <ul className="todo">
+              {report.todos.map((t) => (
+                <li key={t.label}>
+                  <a href={t.href}>
+                    <span className={`badge ${t.level === "urgent" ? "bad" : t.level === "normal" ? "warn" : "info"}`}>
+                      {t.level === "urgent" ? "Urgent" : t.level === "normal" ? "À faire" : "Idée"}
+                    </span>
+                    <span>{t.label}</span>
+                    <span className="arrow">›</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="empty-row">Tout est à jour. Les agents continuent leur travail.</p>
+          )}
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <h2>Hier, par boutique</h2>
+            <a href="/admin/ventes">Ventes</a>
+          </div>
           <div className="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>Boutique</th>
-                  <th className="num">Chiffre d&apos;affaires</th>
-                  <th className="num">Bénéfice estimé</th>
-                  <th className="num">Commandes</th>
-                  <th className="num">Évolution</th>
-                </tr>
-              </thead>
               <tbody>
-                {perSite.map((r) => (
-                  <tr key={r.site.id} className="link">
+                {report.sites.map((s) => (
+                  <tr key={s.site_id} className="link">
                     <td>
-                      <a className="cell-site" href={`/admin${qs({ site: r.site.id, jours: days })}`}>
-                        <i className="dot" style={{ background: colors[r.site.id] }} />
-                        <b>{r.site.name}</b> <span className="faint">{r.site.domain}</span>
+                      <a className="cell-site" href={`/admin/boutiques/${s.site_id}/apercu`}>
+                        <i className="dot" style={{ background: colors[s.site_id] }} />
+                        <b>{s.name}</b>
                       </a>
                     </td>
-                    <td className="num">{moneyRound(r.revenue)}</td>
-                    <td className="num">{moneyRound(profit(cur.filter((o) => o.site_id === r.site.id)))}</td>
-                    <td className="num">{r.orders}</td>
+                    <td className="num">{moneyRound(s.revenue_cents)}</td>
+                    <td className="num muted">{s.orders} cmd</td>
+                    <td className="num muted">{s.sessions} visites</td>
                     <td className="num">
-                      <Delta v={r.revenueChange} />
+                      <Delta v={s.trend} />
                     </td>
                   </tr>
                 ))}
@@ -118,51 +119,95 @@ export default async function Sales({ searchParams }: Props) {
             </table>
           </div>
         </section>
+      </div>
+
+      {(report.alerts.length > 0 || report.ideas.length > 0) && (
+        <div className="cols">
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Alertes</h2>
+            </div>
+            {report.alerts.length ? (
+              <ul className="checks">
+                {report.alerts.map((a) => (
+                  <li key={a}>
+                    <span className="ic bad" aria-hidden="true">
+                      !
+                    </span>
+                    <div>{a}</div>
+                    <span />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="empty-row">Aucune alerte.</p>
+            )}
+          </section>
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Idées pour gagner plus</h2>
+            </div>
+            {report.ideas.length ? (
+              <ul className="checks">
+                {report.ideas.map((a) => (
+                  <li key={a}>
+                    <span className="ic info" aria-hidden="true">
+                      i
+                    </span>
+                    <div>{a}</div>
+                    <span />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="empty-row">Pas d&apos;idée particulière aujourd&apos;hui.</p>
+            )}
+          </section>
+        </div>
       )}
 
-      <section className="panel gap">
-        <div className="panel-head">
-          <h2>Dernières commandes</h2>
-          <a href={`/admin/commandes${qs({ site: siteId })}`}>Toutes les commandes</a>
-        </div>
-        {cur.length ? (
+      {report.agents.length > 0 && (
+        <section className="panel gap">
+          <div className="panel-head">
+            <h2>Ce que les agents ont fait</h2>
+            <a href="/admin/agents">Journal</a>
+          </div>
+          <ul className="checks">
+            {report.agents.map((a) => (
+              <li key={a}>
+                <span className="ic good" aria-hidden="true">
+                  ✓
+                </span>
+                <div>{a}</div>
+                <span />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {reports.length > 1 && (
+        <section className="panel gap">
+          <div className="panel-head">
+            <h2>Rapports précédents</h2>
+          </div>
           <div className="table-wrap">
             <table>
               <tbody>
-                {cur.slice(0, 8).map((o) => (
-                  <tr key={o.id} className="link">
-                    <td>
-                      <a href={`/admin/commandes/${o.id}`}>
-                        <b>#{o.number}</b>
-                      </a>
-                    </td>
-                    <td>{o.name}</td>
-                    {!current && (
-                      <td>
-                        <span className="cell-site">
-                          <i className="dot" style={{ background: colors[o.site_id] }} />
-                          {siteName[o.site_id]}
-                        </span>
-                      </td>
-                    )}
-                    <td className="faint">{dateTime(o.created_at)}</td>
-                    <td>
-                      <span className={`status ${o.status}`}>{ORDER_STATUS_LABEL[o.status]}</span>
-                    </td>
-                    <td className="num">{money(o.total_cents)}</td>
-                  </tr>
-                ))}
+                {reports
+                  .filter((r) => r.day !== report.day)
+                  .slice(0, 10)
+                  .map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.headline}</td>
+                      <td className="num muted">{r.todos.length} à faire</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
-        ) : (
-          <p className="empty-row">Aucune commande sur la période.</p>
-        )}
-      </section>
-      <p className="faint" style={{ marginTop: 12, fontSize: "0.84rem" }}>
-        Montants livraison comprise, hors commandes remboursées ou annulées. Le bénéfice est une estimation : renseignez le prix d&apos;achat de
-        chaque produit pour qu&apos;il soit juste.
-      </p>
+        </section>
+      )}
     </>
   );
 }

@@ -3,7 +3,9 @@ import { usePathname } from "next/navigation";
 import { Icon } from "./icons";
 
 const NAV = [
-  { href: "/admin", label: "Ventes", icon: "analytics" },
+  { href: "/admin", label: "Aujourd'hui", icon: "home" },
+  { href: "/admin/qg", label: "QG des agents", icon: "city" },
+  { href: "/admin/ventes", label: "Ventes", icon: "analytics" },
   { href: "/admin/commandes", label: "Commandes", icon: "orders", count: true },
   { href: "/admin/veille", label: "Veille", icon: "search" },
   { href: "/admin/boutiques", label: "Boutiques", icon: "store" },

@@ -3,10 +3,11 @@ import { adminContext, qs } from "@/lib/admin";
 import { dateTime, money } from "@/lib/format";
 import { ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/types";
 import { SiteFilter } from "../bits";
+import { syncTrackingNow } from "../../actions";
 
 export const metadata = { title: "Commandes" };
 
-type Props = { searchParams: Promise<{ onglet?: string; q?: string; page?: string; site?: string }> };
+type Props = { searchParams: Promise<{ onglet?: string; q?: string; page?: string; site?: string; ok?: string }> };
 const PER_PAGE = 50;
 
 const TABS: { id: string; name: string; status?: OrderStatus }[] = [
@@ -40,7 +41,13 @@ export default async function Orders({ searchParams }: Props) {
             {sp.q ? ` pour « ${sp.q} »` : ""}
           </p>
         </div>
+        <form action={syncTrackingNow} className="actions">
+          <button className="btn quiet small" type="submit" title="Récupère les numéros de suivi chez le fournisseur">
+            Synchroniser le suivi des colis
+          </button>
+        </form>
       </div>
+      {sp.ok === "suivi" && <p className="flash">Suivi des colis synchronisé.</p>}
       <SiteFilter sites={sites} colors={colors} current={siteId} base="/admin/commandes" keep={{ onglet: tab.id, q: sp.q }} />
       <section className="panel">
         <nav className="tabs" aria-label="Filtrer par état">
@@ -107,6 +114,12 @@ export default async function Orders({ searchParams }: Props) {
                     <td className="num">{money(o.total_cents)}</td>
                     <td>
                       <span className={`status ${o.status}`}>{ORDER_STATUS_LABEL[o.status]}</span>
+                      {o.supplier_status === "approbation" && <span className="badge warn" style={{ marginLeft: 6 }}>À approuver</span>}
+                      {(o.supplier_status === "erreur" || (o.supplier_status === "manuel" && o.status === "paid")) && (
+                        <span className="badge bad" style={{ marginLeft: 6 }} title={o.supplier_note}>
+                          À envoyer à la main
+                        </span>
+                      )}
                     </td>
                     <td className="num muted">{o.items.reduce((s, i) => s + i.quantity, 0)}</td>
                   </tr>
