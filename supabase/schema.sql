@@ -1,5 +1,14 @@
--- Schéma de la base. À coller dans Supabase > SQL Editor > New query, puis "Run".
+-- Schéma complet de la base, pour une installation neuve.
+-- À coller dans Supabase > SQL Editor > New query, puis "Run".
+-- Une base déjà installée se met à jour avec "npm run db:migrate" (fichiers de supabase/migrations/),
+-- pas en recollant ce fichier. Toute nouvelle migration doit aussi être ajoutée ici (un test le vérifie).
+
+-- ===========================================================================
+-- Migration 001_base
+-- ===========================================================================
+-- 001 : tables de base (boutiques, produits, guides, commandes).
 -- Toutes les boutiques partagent les mêmes tables : chaque ligne porte l'identifiant de sa boutique (site_id).
+-- Comme les suivantes, cette migration peut être rejouée sans risque sur une base existante.
 
 create table if not exists sites (
   id               text primary key,
@@ -109,10 +118,11 @@ alter table products enable row level security;
 alter table guides   enable row level security;
 alter table orders   enable row level security;
 
--- ---------------------------------------------------------------------------
--- Agents (veille, construction de boutique, contenu)
--- Si vous aviez déjà exécuté la partie du dessus, exécutez seulement ce qui suit.
--- ---------------------------------------------------------------------------
+-- ===========================================================================
+-- Migration 002_agents
+-- ===========================================================================
+-- 002 : agents (veille, construction de boutique, contenu) et leur journal.
+
 create table if not exists opportunities (
   id           text primary key default gen_random_uuid()::text,
   created_at   timestamptz not null default now(),
@@ -149,10 +159,11 @@ create index if not exists agent_runs_created on agent_runs (created_at desc);
 alter table opportunities enable row level security;
 alter table agent_runs    enable row level security;
 
--- ---------------------------------------------------------------------------
--- Version 3 : commandes fournisseur automatiques, mesure d'audience, rapports, réglages
--- Si vous aviez déjà exécuté les parties du dessus, exécutez seulement ce qui suit.
--- ---------------------------------------------------------------------------
+-- ===========================================================================
+-- Migration 003_commandes_audience_rapports
+-- ===========================================================================
+-- 003 : commandes fournisseur automatiques, mesure d'audience, rapports, réglages.
+
 alter table products add column if not exists supplier_variant_id text not null default '';
 alter table products add column if not exists supplier_country text not null default '';
 alter table orders add column if not exists supplier_order_id text;
@@ -244,3 +255,18 @@ alter table analytics_daily    enable row level security;
 alter table analytics_visitors enable row level security;
 alter table reports            enable row level security;
 alter table settings           enable row level security;
+
+-- ===========================================================================
+-- Suivi des migrations : marque comme déjà appliquées celles contenues dans ce fichier,
+-- pour que "npm run db:migrate" ne les rejoue pas.
+-- ===========================================================================
+create table if not exists schema_migrations (
+  version    text primary key,
+  applied_at timestamptz not null default now()
+);
+alter table schema_migrations enable row level security;
+insert into schema_migrations (version) values
+  ('001_base'),
+  ('002_agents'),
+  ('003_commandes_audience_rapports')
+on conflict (version) do nothing;

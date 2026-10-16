@@ -7,15 +7,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { loadEnvFiles } from "./load-env.mjs";
 
-for (const f of [".env.local", ".env"]) {
-  const p = path.join(process.cwd(), f);
-  if (!fs.existsSync(p)) continue;
-  for (const line of fs.readFileSync(p, "utf8").split("\n")) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?([^"\n]*)"?\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-}
+loadEnvFiles();
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
