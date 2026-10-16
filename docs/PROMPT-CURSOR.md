@@ -17,7 +17,7 @@ Le dépôt contient déjà les règles permanentes du projet dans `.cursor/rules
 | Outil | Pourquoi | Prix |
 |---|---|---|
 | [Cursor](https://cursor.com) | L'éditeur avec l'agent qui code | Offre gratuite possible |
-| [Node.js](https://nodejs.org) 20 ou plus (version LTS) | Faire tourner le projet sur votre ordinateur | Gratuit |
+| [Node.js](https://nodejs.org) 22 ou plus (version LTS) | Faire tourner le projet sur votre ordinateur | Gratuit |
 | [Git](https://git-scm.com) | Récupérer et envoyer le code sur GitHub | Gratuit |
 | Compte GitHub (`maximdprt`) | Le code est dans `github.com/maximdprt/multiboutique` | Gratuit |
 | Compte [Supabase](https://supabase.com) | La base de données | Gratuit |
@@ -48,7 +48,8 @@ Le dépôt contient déjà les règles permanentes du projet dans `.cursor/rules
 1. Sur supabase.com : **New project**, région **Europe (Paris ou Francfort)**, notez le mot de passe de la base.
 2. **SQL Editor > New query** : ouvrez le fichier `supabase/schema.sql` du projet, copiez tout, collez, **Run**. Vous devez voir « Success ».
 3. **Project Settings > API** : copiez l'**URL du projet** et la clé **service_role** (secrète, ne la partagez jamais).
-4. Facultatif, pour partir des boutiques d'exemple : dans le terminal de Cursor
+4. Pour les mises à jour futures du schéma : **Connect > Session pooler**, copiez la chaîne `postgresql://…` (avec le mot de passe de la base) dans `SUPABASE_DB_URL` de `.env.local`. Ensuite, `npm run db:migrate` applique ce qui manque.
+5. Facultatif, pour partir des boutiques d'exemple : dans le terminal de Cursor
    ```bash
    SUPABASE_URL="https://xxxx.supabase.co" SUPABASE_SERVICE_ROLE_KEY="votre-cle" npm run seed:supabase
    ```

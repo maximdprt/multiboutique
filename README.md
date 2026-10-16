@@ -23,7 +23,7 @@ Sans configuration, tout tourne en **mode démo** (données et agents fictifs), 
 
 ## 1. Essayer en local
 
-Il vous faut [Node.js](https://nodejs.org) 20 ou plus.
+Il vous faut [Node.js](https://nodejs.org) 22 ou plus.
 
 ```bash
 npm install
@@ -47,7 +47,7 @@ Les données de démo sont dans `.data/demo-db.json` ; supprimez ce fichier pour
 ### a. Supabase (la base de données)
 
 1. Créez un projet sur [supabase.com](https://supabase.com) (région Europe).
-2. **SQL Editor > New query** : collez `supabase/schema.sql`, puis **Run**. (Si vous aviez installé une version précédente, exécutez seulement les parties ajoutées depuis, en bas du fichier.)
+2. **SQL Editor > New query** : collez `supabase/schema.sql`, puis **Run**. Pour mettre à jour une base déjà installée : renseignez `SUPABASE_DB_URL` (**Connect > Session pooler**) dans `.env.local`, puis `npm run db:migrate`.
 3. **Project Settings > API** : notez l'URL du projet et la clé **service_role** (secrète).
 
 ### b. Vercel (l'hébergement)
@@ -55,6 +55,7 @@ Les données de démo sont dans `.data/demo-db.json` ; supprimez ce fichier pour
 1. Mettez ce dossier sur GitHub (dépôt privé), puis sur [vercel.com](https://vercel.com) : **Add New > Project**.
 2. Ajoutez les variables du fichier `.env.example`, au minimum : `ADMIN_PASSWORD`, `ADMIN_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`.
 3. **Deploy**. L'admin est sur `https://votre-projet.vercel.app/admin`.
+4. Dans l'admin, **Réglages > État des services** indique ce qui est branché, ce qui manque et comment le faire.
 
 Les tâches planifiées sont déclarées dans `vercel.json` : veille (6 h à Paris), suivi des colis et rapport (7 h), guides (lundi 8 h). Vercel les active au déploiement. Sur l'offre gratuite Hobby, chaque tâche tourne une fois par jour, à l'heure près.
 
@@ -144,6 +145,20 @@ Les agents s'inspirent de ce qui marche (produits, prix, angles) mais ne copient
 
 ---
 
+## Vérifier que tout marche
+
+```bash
+npm run typecheck   # types
+npm run lint        # règles de code
+npm test            # tests des calculs (Vitest)
+npm run test:e2e    # parcours dans un navigateur, en mode démo (Playwright ; la première fois : npx playwright install chromium)
+npm run build       # compilation
+```
+
+La CI GitHub lance tout cela à chaque envoi de code. Le fonctionnement détaillé est dans `docs/ARCHITECTURE.md`, l'avancement dans `docs/AVANCEMENT.md`.
+
+---
+
 ## Organisation du code
 
 ```
@@ -157,6 +172,7 @@ app/admin/                  L'admin (protégé par mot de passe)
   (panel)/veille/           Résultats de la veille
   (panel)/boutiques/creer/  Assistant de création de boutique
   (panel)/agents/           Agents et journal
+  (panel)/reglages/services/  État des services (ce qui est configuré)
 app/api/cron/               Tâches planifiées (veille, contenu)
 app/api/checkout            Paiement Stripe
 app/api/stripe/webhook      Paiements et remboursements
@@ -165,6 +181,12 @@ lib/fulfillment.ts          Commandes fournisseur automatiques et suivi
 lib/suppliers/cj.ts         Connexion à CJ Dropshipping
 lib/report.ts               Rapport du matin
 lib/db/                     Accès aux données (Supabase ou démo)
-supabase/schema.sql         Tables de la base
+lib/env.ts                  Vérification des variables d'environnement
+supabase/schema.sql         Tables de la base (installation neuve)
+supabase/migrations/        Mises à jour de la base (npm run db:migrate)
+scripts/                    Migrations, copie de la démo dans Supabase
+tests/unit/, tests/e2e/     Tests (Vitest, Playwright)
+docs/                       Architecture, avancement, décisions, prompts par phase
 vercel.json                 Planification des agents
+.github/workflows/ci.yml    Vérifications automatiques sur GitHub
 ```
