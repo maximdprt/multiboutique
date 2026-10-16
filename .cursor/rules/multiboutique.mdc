@@ -1,0 +1,35 @@
+---
+description: Règles permanentes du projet multiboutique (garde-fous, stack, façon de travailler)
+alwaysApply: true
+---
+
+# Projet multiboutique : règles permanentes
+
+Tu travailles sur une plateforme e-commerce française qui crée, fait tourner et améliore plusieurs boutiques de niche depuis un seul admin, avec des agents IA. Le propriétaire ne code pas : explique tout en français simple.
+
+## Stack (ne pas changer sans demander)
+- Next.js 15 (App Router) + TypeScript strict, une seule app multi-domaines (`middleware.ts` réécrit chaque domaine vers `app/[host]/…`).
+- Supabase (Postgres + Storage) via l'interface `Db` de `lib/db/` ; mode démo local (`lib/db/demo.ts`) quand Supabase n'est pas configuré. Toute nouvelle donnée passe par cette interface et existe dans les deux implémentations.
+- Stripe Checkout + webhook idempotent. Vercel (hébergement + tâches planifiées `vercel.json`). GitHub Actions pour les tâches longues.
+- Agents IA dans `lib/agents/` (API Claude avec recherche web, sorties structurées par outil). Le fournisseur de modèle doit rester derrière une interface pour pouvoir en changer.
+- CSS maison (`app/admin/admin.css`, `app/[host]/store.css`), pas de librairie d'UI lourde. Admin sobre, style admin Shopify.
+
+## Garde-fous non négociables
+1. Jamais de copie des textes, photos, logos ou marques d'un concurrent. Tout contenu publié est original.
+2. Aucun faux avis, faux prix barré, fausse urgence, promesse de santé. Aucune caractéristique produit inventée : seulement des faits sourcés (fiche fournisseur).
+3. Catégories interdites : contrefaçon/marques, cosmétiques, compléments, médical, bébés et jouets < 3 ans, électrique sur secteur, armes, produits réglementés.
+4. Collecte de données : API officielles et fournisseurs de données d'abord. Scraping seulement si `robots.txt` et conditions d'utilisation l'autorisent, 1 requête/s max par domaine, user-agent identifiable, cache 24 h, aucune donnée personnelle, aucun contournement de protection. On stocke des faits (titre, prix, date, source), jamais les textes ou images des autres. Toute estimation est affichée comme estimation.
+5. SEO : pas de contenu produit en masse. Plafonds : 15 fiches et 5 guides au lancement d'une boutique, puis 2 guides par semaine maximum. Contrôle qualité obligatoire avant publication. Pas d'API Google Indexing pour l'e-commerce.
+6. Toute dépense d'argent ou action difficile à annuler (pub, commande fournisseur au-dessus du seuil, suppression, changement de domaine, remboursement) passe par une approbation dans l'admin.
+7. Budget du propriétaire : 0 €. Privilégie toujours les solutions gratuites (Vercel Hobby, Supabase gratuit, GitHub Actions, CJ, Telegram, Resend gratuit). Tout ce qui coûte (API IA, données SEO) est optionnel, plafonné par un budget configurable et a un mode démo.
+8. Aucun secret dans le code ni dans Git. Variables d'environnement uniquement ; clé Supabase `service_role` côté serveur seulement. Mettre à jour `.env.example` à chaque nouvelle variable.
+9. Toute modification de contenu (humain ou agent) est versionnée et restaurable.
+10. Agents idempotents, journalisés dans `agent_runs`, relançables sans doublon.
+
+## Façon de travailler
+- Avant de coder une phase : lis `docs/AVANCEMENT.md` et les fichiers concernés. Après : mets à jour `docs/AVANCEMENT.md` (ce qui marche, ce qui reste, décisions) et `docs/DECISIONS.md`.
+- Petits commits clairs en français (`feat(admin): …`, `fix(cj): …`). Ne pousse jamais de `.env`.
+- Vérifie toujours : `npx tsc --noEmit`, `npm run build`, et les tests (`npm test`, `npm run test:e2e` quand ils existent). Ne dis jamais qu'une chose marche sans l'avoir testée ; si une intégration réelle n'a pas pu être testée, dis-le.
+- Le mode démo doit toujours fonctionner sans aucune clé.
+- Questions au propriétaire : groupées, seulement pour l'argent, le juridique ou le goût. Sinon, choisis la solution standard et note-la dans `docs/DECISIONS.md`.
+- Textes de l'interface : français, phrases simples, verbes d'action sur les boutons, messages d'erreur qui disent quoi faire.

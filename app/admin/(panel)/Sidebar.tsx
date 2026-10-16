@@ -4,7 +4,6 @@ import { Icon } from "./icons";
 
 const NAV = [
   { href: "/admin", label: "Aujourd'hui", icon: "home" },
-  { href: "/admin/qg", label: "QG des agents", icon: "city" },
   { href: "/admin/ventes", label: "Ventes", icon: "analytics" },
   { href: "/admin/commandes", label: "Commandes", icon: "orders", count: true },
   { href: "/admin/veille", label: "Veille", icon: "search" },

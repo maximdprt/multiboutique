@@ -5,7 +5,6 @@ Vos boutiques en ligne, votre tableau de bord, et des agents qui travaillent pou
 - **Les boutiques** : chaque nom de domaine affiche sa propre boutique (nom, couleurs, produits, guides, pages légales). Pages rapides, rendues côté serveur, optimisées pour Google et les moteurs IA.
 - **L'admin** (`/admin`) :
   - **Aujourd'hui** : le rapport du matin (chiffres d'hier, à faire, alertes, idées pour gagner plus), calculé sans IA payante ;
-  - **QG des agents** : la ville 3D de vos boutiques (hauteur des bâtiments = chiffre d'affaires sur 30 jours), les agents qui circulent vers ce sur quoi ils travaillent, et les terrains à bâtir (idées de la veille) ;
   - **Ventes**, **Commandes**, **Boutiques** (avec une page d'analyse par boutique : ventes, visites, parcours d'achat, sources dont les assistants IA, pages les plus vues) ;
   - **Veille** : les idées à trier en cartes (écarter, garder, lancer) ;
   - **Agents** : le journal de chaque exécution.
@@ -15,6 +14,8 @@ Vos boutiques en ligne, votre tableau de bord, et des agents qui travaillent pou
   - **Construction**, à la demande : vous répondez à quelques questions (niche, nom, couleurs, produits, guides, livraison), l'agent écrit toute la boutique et cherche les fournisseurs.
   - **Contenu**, chaque lundi : un nouveau guide par boutique, sur une question que les gens posent et que vous ne couvrez pas encore.
 - **Le paiement** : Stripe. **La base** : Supabase. **L'hébergement** : Vercel.
+
+Pour continuer le développement avec Cursor : suivez `docs/PROMPT-CURSOR.md` (mise en place GitHub, Supabase, Vercel, puis un prompt par phase). Les règles permanentes du projet sont dans `.cursor/rules/multiboutique.mdc`.
 
 Sans configuration, tout tourne en **mode démo** (données et agents fictifs), pour essayer le parcours complet.
 
@@ -151,7 +152,6 @@ app/[host]/                 Les boutiques (le dossier [host] reçoit le nom de d
   sitemap.xml/, robots.txt/, llms.txt/
 app/admin/                  L'admin (protégé par mot de passe)
   (panel)/page.tsx          Aujourd'hui (rapport du matin)
-  (panel)/qg/               Ville 3D des boutiques et des agents
   (panel)/ventes/           Ventes
   (panel)/boutiques/[id]/apercu/  Analyse d'une boutique
   (panel)/veille/           Résultats de la veille

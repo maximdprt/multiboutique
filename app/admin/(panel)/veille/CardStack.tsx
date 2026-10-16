@@ -78,7 +78,7 @@ export function CardStack({ cards }: { cards: Card[] }) {
         <p className="empty-row">
           Toutes les idées sont triées.{" "}
           {last && (
-            <button type="button" className="qg-link" onClick={undo}>
+            <button type="button" className="link-btn" onClick={undo}>
               Annuler la dernière décision
             </button>
           )}
@@ -177,7 +177,7 @@ export function CardStack({ cards }: { cards: Card[] }) {
       {last && (
         <p className="stack-undo">
           « {last.card.product} » {last.status === "ecartee" ? "écartée" : "gardée pour plus tard"}.{" "}
-          <button type="button" className="qg-link" onClick={undo}>
+          <button type="button" className="link-btn" onClick={undo}>
             Annuler
           </button>
         </p>
