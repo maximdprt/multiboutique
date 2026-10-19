@@ -2,6 +2,38 @@
 
 Les choix techniques faits en cours de route, avec leur raison. Le plus récent en haut.
 
+## Phase 1 (19 octobre 2026)
+
+**API Vercel et GitHub : routes vérifiées dans la documentation officielle du 19 octobre 2026.**
+Vercel : `GET /v9/projects/{id}`, `GET /v10/projects?repoUrl=…`, `POST /v11/projects`, `POST /v10/projects/{id}/env?upsert=true`, `POST /v13/deployments` et `GET /v13/deployments/{id}`, `POST /v10/projects/{id}/domains`, `GET /v9/projects/{id}/domains/{domaine}` et `…/verify`, `GET /v6/domains/{domaine}/config?projectIdOrName=…`. GitHub : `GET …/actions/secrets/public-key` puis `PUT …/actions/secrets/{nom}`, en-tête `X-GitHub-Api-Version: 2026-03-10`. Le projet est retrouvé par son lien GitHub vérifié côté script (le filtre de la liste ne suffit pas à lui seul).
+
+**Enregistrements DNS lus chez Vercel, jamais codés en dur.**
+Vercel recommande désormais des valeurs propres à chaque projet (par exemple une adresse A autre que 76.76.21.21, un CNAME `….vercel-dns-0xx.com`). L'onglet Domaine affiche donc les valeurs de rang 1 de `recommendedIPv4` et `recommendedCNAME`, plus les enregistrements TXT de vérification demandés par Vercel. Les valeurs « classiques » n'apparaissent qu'en mode démo.
+
+**« En ligne » = la boutique répond en HTTPS avec son propre robots.txt.**
+Vercel n'a pas d'API simple pour l'état du certificat d'un domaine. On demande `https://domaine/robots.txt` : la requête n'aboutit qu'avec un certificat valide, et le fichier doit annoncer le sitemap de ce domaine (ce qui écarte une page de parking du registraire). C'est aussi la seule vérification possible sans jeton Vercel (mode manuel).
+
+**État des domaines dans la table `settings` (clé `domaine:<id>`), pas de nouvelle table.**
+Une ligne par boutique, sans requête ni historique à faire : le magasin clé-valeur existant suffit et marche déjà en Supabase comme en démo. Si le domaine d'une boutique change, l'état repart de zéro ; l'ancien domaine n'est pas retiré de Vercel automatiquement (suppression = action difficile à annuler, à faire à la main).
+
+**Ajout du domaine : le clic sur « Ajouter ce domaine » vaut approbation.**
+L'ajout est réversible (on retire le domaine dans Vercel), gratuit et ne touche pas le DNS du propriétaire. `www` est ajouté avec une redirection 308 vers le domaine nu, en plus de celle du middleware. Les appels sont rejouables : un domaine déjà présent n'est pas rajouté.
+
+**IndexNow à la mise en ligne : toutes les adresses du sitemap, une seule fois.**
+IndexNow attend une liste d'adresses, pas un sitemap : on envoie celles du sitemap (`lib/sitemap.ts`, partagé avec `sitemap.xml`) quand le domaine passe à « En ligne » pour la première fois. Google n'utilise pas IndexNow : le rapport du matin rappelle de déclarer le domaine dans Search Console et Merchant Center jusqu'au clic sur « C'est fait ».
+
+**Tâche planifiée des domaines à 4 h UTC, avant le rapport (5 h UTC).**
+Le rapport du matin voit ainsi l'état du jour. L'offre Hobby autorise 100 tâches planifiées par projet, une fois par jour au plus, à l'heure près.
+
+**Adresse d'aperçu : `/apercu/<id>/…`, réécrite vers le segment `[host]` = `apercu~<id>`.**
+Elle marche sur n'importe quelle adresse (`.vercel.app`, `localhost`, domaine de l'admin), même pour une boutique hors ligne, pour pouvoir la vérifier (et plus tard l'auditer avec Lighthouse) avant l'ouverture. Elle n'est pas protégée par mot de passe : l'audit doit pouvoir la lire. Protections : en-tête `X-Robots-Tag: noindex, nofollow` et balise robots, aucune visite comptée dans les statistiques. Les liens internes passent par `StoreLink` (`components/store.tsx`) qui ajoute le préfixe ; le panier envoie l'identifiant de la boutique au paiement, et Stripe revient sur l'aperçu. Les balises canoniques et le sitemap pointent toujours vers le vrai domaine.
+
+**`npm run setup` : une question avant chaque envoi, `--oui` pour tout accepter.**
+Sans terminal interactif, les réponses par défaut (oui) s'appliquent. Les variables vides ne partent jamais vers Vercel, ni `GITHUB_TOKEN`, `GITHUB_REPO` et `SUPABASE_DB_URL`, qui ne servent que sur l'ordinateur ou dans GitHub Actions. Les variables partent en type `encrypted`, pour la production et les préversions. `VERCEL_TOKEN` part sur Vercel parce que l'agent Domaines en a besoin : un jeton Vercel donne accès à tout le compte (ou à toute l'équipe choisie), à garder secret comme un mot de passe. Les secrets GitHub sont chiffrés avec `libsodium-wrappers`, comme dans l'exemple officiel de GitHub. Le script a été essayé sans clé et contre de faux serveurs Vercel et GitHub, pas contre les vrais.
+
+**Mode démo des domaines : simulation pas à pas.**
+Sans base réelle ni jeton, « Ajouter ce domaine » simule l'ajout et chaque « Vérifier maintenant » franchit une étape (DNS, vérification, certificat, en ligne) : le parcours se teste de bout en bout sans rien toucher (test Playwright).
+
 ## Phase 0 (16 octobre 2026)
 
 **Migrations : script maison avec `pg`, pas la CLI Supabase.**

@@ -28,16 +28,16 @@ Une seule application Next.js affiche **toutes les boutiques** (une par nom de d
 
 | Dossier ou fichier | Rôle |
 |---|---|
-| `middleware.ts` | Aiguillage. Lit le nom de domaine de chaque visite : `/admin` part vers l'admin (après vérification de la session), tout le reste est réécrit vers `app/[host]/…` avec le domaine en paramètre. Redirige `www.` vers le domaine nu. |
+| `middleware.ts` | Aiguillage. Lit le nom de domaine de chaque visite : `/admin` part vers l'admin (après vérification de la session), tout le reste est réécrit vers `app/[host]/…` avec le domaine en paramètre. Redirige `www.` vers le domaine nu. L'adresse d'aperçu `/apercu/<id>/…` est réécrite vers `app/apercu~<id>/…` (jamais indexée : en-tête `X-Robots-Tag`). |
 | `app/[host]/` | **Les boutiques.** `[host]` reçoit le domaine ; `lib/sites.ts` retrouve la boutique correspondante. Accueil, `produits/`, `guides/`, `panier/`, `merci/`, pages légales (`[page]/` + `legal.ts`), `sitemap.xml`, `robots.txt`, `llms.txt`, `feed.xml` (Google Merchant Center). |
-| `app/admin/` | **L'admin.** `login/` (mot de passe), `(panel)/` pour toutes les pages derrière la connexion : Aujourd'hui (`page.tsx`), `ventes/`, `commandes/`, `veille/`, `boutiques/` (dont `[id]/apercu/` et l'assistant `creer/`), `produits/`, `guides/`, `agents/`, `reglages/services/`. `actions.ts` et `agent-actions.ts` contiennent les actions serveur (enregistrer, rembourser, lancer un agent…). |
+| `app/admin/` | **L'admin.** `login/` (mot de passe), `(panel)/` pour toutes les pages derrière la connexion : Aujourd'hui (`page.tsx`), `ventes/`, `commandes/`, `veille/`, `boutiques/` (fiche boutique avec ses onglets : `[id]/apercu/` (analyse), `[id]/` (réglages), `[id]/domaine/` ; assistant `creer/`), `produits/`, `guides/`, `agents/`, `reglages/services/`. `actions.ts`, `agent-actions.ts` et `domain-actions.ts` contiennent les actions serveur (enregistrer, rembourser, lancer un agent…). |
 | `app/api/` | Points d'entrée techniques : `checkout` (crée le paiement Stripe), `stripe/webhook` (Stripe confirme les paiements), `collect` (mesure d'audience), `cron/*` (tâches planifiées). |
-| `components/` | Éléments partagés des boutiques : panier (`cart.tsx`, `CartView.tsx`, `AddToCart.tsx`), fiches (`ProductBits.tsx`), mesure d'audience (`track.ts`). |
+| `components/` | Éléments partagés des boutiques : panier (`cart.tsx`, `CartView.tsx`, `AddToCart.tsx`), fiches (`ProductBits.tsx`), mesure d'audience (`track.ts`), contexte de la boutique et liens internes qui gardent le préfixe d'aperçu (`store.tsx`). |
 | `lib/db/` | **Accès aux données.** `types.ts` décrit l'interface `Db` ; `supabase.ts` l'implémente avec Supabase, `demo.ts` avec un fichier JSON local ; `index.ts` choisit l'une ou l'autre ; `seed.ts` contient les boutiques de démonstration. |
-| `lib/` (reste) | La logique métier : `orders.ts` (prix du panier, enregistrement d'une commande), `fulfillment.ts` + `suppliers/cj.ts` (fournisseur), `report.ts` (rapport du matin), `stats.ts` (chiffres des pages Ventes), `analytics.ts` (sources de visites), `seo.tsx` (données structurées), `richtext.tsx` (mise en forme des textes), `email.ts` (Resend et Telegram), `indexnow.ts`, `env.ts` (vérification des variables d'environnement), `auth.ts` + `admin.ts` (session admin). |
+| `lib/` (reste) | La logique métier : `orders.ts` (prix du panier, enregistrement d'une commande), `fulfillment.ts` + `suppliers/cj.ts` (fournisseur), `report.ts` (rapport du matin), `stats.ts` (chiffres des pages Ventes), `analytics.ts` (sources de visites), `seo.tsx` (données structurées), `richtext.tsx` (mise en forme des textes), `email.ts` (Resend et Telegram), `indexnow.ts`, `sitemap.ts` (adresses publiques d'une boutique), `store-path.ts` (adresse d'aperçu), `domains.ts` + `vercel.ts` (agent Domaines et API Vercel), `env.ts` (vérification des variables d'environnement), `auth.ts` + `admin.ts` (session admin). |
 | `lib/agents/` | Les agents IA : `claude.ts` (appel à l'API avec recherche web et résultat structuré), `run.ts` (journal d'exécution), `veille.ts`, `builder.ts` (construction de boutique), `content.ts` (guides hebdomadaires). |
 | `supabase/` | `schema.sql` (installation neuve complète) et `migrations/` (mises à jour numérotées, appliquées par `npm run db:migrate`). |
-| `scripts/` | Scripts lancés à la main : `db-migrate.mjs`, `seed-supabase.mjs` (copie la démo dans Supabase). |
+| `scripts/` | Scripts lancés à la main : `setup.mjs` (+ `setup-lib.mjs`, installation guidée `npm run setup`), `db-migrate.mjs`, `seed-supabase.mjs` (copie la démo dans Supabase). |
 | `tests/` | `unit/` (Vitest : calculs) et `e2e/` (Playwright : parcours dans un vrai navigateur, en mode démo). |
 | `vercel.json` | Les tâches planifiées (heures en UTC). |
 | `.github/workflows/ci.yml` | Vérifications automatiques à chaque envoi sur GitHub. |
@@ -73,6 +73,7 @@ Chaque exécution d'agent est notée dans la table `agent_runs` (titre, journal 
 | **Construction** (`builder.ts`) | Assistant **Créer une boutique** (souvent depuis une carte « Lancer ») | 1) propose noms, couleurs, produits, guides ; 2) écrit la boutique, les fiches produits (avec recherche fournisseur) et les premiers guides | `sites`, `products`, `guides` ; la carte de veille passe « Lancée » ; IndexNow prévenu |
 | **Contenu** (`content.ts`) | Chaque lundi (`/api/cron/contenu`) ou bouton | Un guide par boutique, sur une question réelle pas encore couverte | `guides` (publié ou brouillon selon `AGENT_AUTOPUBLISH`) ; IndexNow |
 | **Suivi des colis** (`fulfillment.ts`) | Chaque jour (`/api/cron/suivi`) | Récupère les numéros de suivi chez CJ | `orders` |
+| **Domaines** (`lib/domains.ts`, sans IA) | Boutons de l'onglet **Domaine** ; chaque jour (`/api/cron/domaines`) | Ajoute le domaine et `www` au projet Vercel, lit les DNS recommandés, vérifie DNS, propriété et HTTPS ; à la mise en ligne, signale le sitemap à IndexNow | `settings` (`domaine:<id>`) ; ligne « Déclarer le domaine… » et alerte « ne répond plus » dans le rapport |
 | **Rapport du matin** (`report.ts`, sans IA) | Chaque jour (`/api/cron/rapport`) | Chiffres d'hier, à faire, alertes, idées | `reports` ; envoi e-mail et Telegram |
 
 Sans clé `ANTHROPIC_API_KEY`, les agents IA tournent en **mode démo** (exemples fictifs, aucun coût). Les appels à Claude passent tous par `lib/agents/claude.ts` : une recherche web limitée en nombre, puis un « outil » dont le schéma impose la forme du résultat.
@@ -93,7 +94,7 @@ Toute lecture ou écriture passe par l'interface `Db` (`lib/db/types.ts`), qui e
 | Journal des agents | `agent_runs` | |
 | Audience | `analytics_daily` (+ `analytics_visitors`, effacée au bout de 2 jours) | Un compteur par boutique et par jour ; ni cookie ni adresse IP conservée |
 | Rapports du matin | `reports` | Un par jour |
-| Réglages techniques | `settings` | Ex. jeton d'accès CJ |
+| Réglages techniques | `settings` | Ex. jeton d'accès CJ ; état du domaine de chaque boutique (clé `domaine:<id>` : enregistrements DNS, étapes, date de mise en ligne, déclaration Google faite) |
 | Version du schéma | `schema_migrations` | Migrations déjà appliquées |
 
 Ce qui n'est **pas** dans la base :
@@ -117,8 +118,8 @@ Sécurité de la base : la sécurité au niveau des lignes (RLS) est activée su
 |---|---|
 | `npm run typecheck` | Les types TypeScript |
 | `npm run lint` | Les règles de code (ESLint, configuration Next.js) |
-| `npm test` | Les calculs : statistiques, rapport du matin, prix et livraison, mise en forme des textes, sources de visites, variables d'environnement, migrations |
-| `npm run test:e2e` | Dans un vrai navigateur, en mode démo : connexion à l'admin, commande de bout en bout jusqu'à l'envoi fournisseur simulé, tri d'une carte de veille, page État des services |
+| `npm test` | Les calculs : statistiques, rapport du matin, prix et livraison, mise en forme des textes, sources de visites, variables d'environnement, migrations, adresse d'aperçu, agent Domaines (API Vercel simulée), fonctions de `npm run setup` |
+| `npm run test:e2e` | Dans un vrai navigateur, en mode démo : connexion à l'admin, commande de bout en bout jusqu'à l'envoi fournisseur simulé, tri d'une carte de veille, page État des services, navigation et commande sur l'adresse d'aperçu, ajout d'un domaine jusqu'à « En ligne » |
 | `npm run build` | La compilation de production |
 
 La CI GitHub (`.github/workflows/ci.yml`) lance tout cela à chaque envoi de code.

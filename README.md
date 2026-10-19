@@ -52,12 +52,16 @@ Les données de démo sont dans `.data/demo-db.json` ; supprimez ce fichier pour
 
 ### b. Vercel (l'hébergement)
 
+**Le plus simple : `npm run setup`.** Le script vérifie votre ordinateur, crée `.env.local` et génère les secrets, applique les migrations Supabase (si `SUPABASE_DB_URL` est rempli), puis, si vous avez mis un jeton `VERCEL_TOKEN` dans `.env.local` (Vercel > **Account Settings > Tokens**) : il retrouve ou crée le projet Vercel lié au dépôt GitHub, y envoie vos variables remplies, déploie et affiche l'adresse du site. Avec `GITHUB_TOKEN` (jeton « fine-grained » limité au dépôt, permission **Secrets** en écriture), il crée aussi les secrets GitHub Actions. Il pose une question avant chaque envoi, et finit par la liste de ce qui reste à faire. Relançable sans risque. Pour créer le projet, l'application Vercel doit avoir accès au dépôt (Vercel > **Account Settings > Git**).
+
+À la main :
+
 1. Mettez ce dossier sur GitHub (dépôt privé), puis sur [vercel.com](https://vercel.com) : **Add New > Project**.
 2. Ajoutez les variables du fichier `.env.example`, au minimum : `ADMIN_PASSWORD`, `ADMIN_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`.
 3. **Deploy**. L'admin est sur `https://votre-projet.vercel.app/admin`.
 4. Dans l'admin, **Réglages > État des services** indique ce qui est branché, ce qui manque et comment le faire.
 
-Les tâches planifiées sont déclarées dans `vercel.json` : veille (6 h à Paris), suivi des colis et rapport (7 h), guides (lundi 8 h). Vercel les active au déploiement. Sur l'offre gratuite Hobby, chaque tâche tourne une fois par jour, à l'heure près.
+Les tâches planifiées sont déclarées dans `vercel.json` : veille et vérification des domaines (6 h à Paris), suivi des colis et rapport (7 h), guides (lundi 8 h). Vercel les active au déploiement. Sur l'offre gratuite Hobby, chaque tâche tourne une fois par jour, à l'heure près.
 
 ### Coûts avec un budget à 0 €
 
@@ -71,7 +75,12 @@ Gratuit : Vercel Hobby, Supabase (offre gratuite), GitHub, CJ Dropshipping, Tele
 
 ### d. Les noms de domaine
 
-Pour chaque boutique : achetez le domaine, ajoutez-le dans Vercel (**Settings > Domains**, avec et sans `www`), et vérifiez qu'il est bien renseigné dans l'admin (**Boutiques > Réglages**).
+**Avant l'achat**, chaque boutique s'affiche sur son adresse d'aperçu : `https://votre-projet.vercel.app/apercu/<identifiant>` (par exemple `/apercu/bocal`). Cette adresse n'est jamais indexée par les moteurs et ses visites ne comptent pas dans les statistiques.
+
+**Après l'achat** (OVH, Gandi, Namecheap… environ 10 € par an) : renseignez le domaine dans l'admin (**Boutiques > fiche boutique > Réglages**), puis ouvrez l'onglet **Domaine**.
+
+- Avec `VERCEL_TOKEN` et `VERCEL_PROJECT_ID` : cliquez sur **Ajouter ce domaine**. Le domaine et sa variante `www` (redirigée vers le domaine sans `www`) sont ajoutés au projet Vercel, et l'onglet affiche les enregistrements DNS exacts à recopier chez votre registraire (bouton **Copier**). L'état (DNS, vérification, certificat HTTPS) se met à jour chaque matin, ou avec **Vérifier maintenant**. Quand il passe à **En ligne**, Bing est prévenu par IndexNow et le rapport du matin vous rappelle de déclarer le domaine dans Google Search Console et Merchant Center.
+- Sans jeton : ajoutez le domaine dans Vercel (**Settings > Domains**, avec et sans `www`), recopiez les DNS affichés par Vercel, puis cliquez sur **Vérifier maintenant** dans l'onglet Domaine.
 
 ### e. Stripe (le paiement)
 
