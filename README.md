@@ -168,9 +168,18 @@ La CI GitHub lance tout cela à chaque envoi de code. Le fonctionnement détaill
 
 ---
 
+### Les gabarits
+
+Chaque boutique a un gabarit, choisi dans **Boutiques > fiche boutique > Réglages > Apparence** :
+
+- **Studio** (celui des boutiques créées par l'agent) : fond sombre, nom de la boutique en très grand, images des produits qui défilent avec la page, collections numérotées, produits phares en cartes empilées, police Kanit. Le bouton principal est un dégradé de votre couleur principale vers votre couleur d'accent. Exemple : Chat Perché, sur `/apercu/chat`.
+- **Classique** : clair et sobre. Exemple : Bocal & Cie, sur `/apercu/bocal`.
+
+En local, la démo garde les données déjà créées : pour voir Chat Perché en Studio, choisissez « Studio » dans ses réglages (ou supprimez `.data/demo-db.json` pour repartir de la démo neuve).
+
 ### Voir le rendu
 
-`npm run rendu` parcourt la boutique exemple (Bocal & Cie) et l'admin sur ordinateur et sur mobile, vérifie le rendu de chaque page et enregistre les captures : ouvrez ensuite `rendu/index.html` dans votre navigateur.
+`npm run rendu` parcourt les deux boutiques exemples (Chat Perché en Studio, Bocal & Cie en Classique) et l'admin sur ordinateur et sur mobile, vérifie le rendu de chaque page et enregistre les captures : ouvrez ensuite `rendu/index.html` dans votre navigateur.
 
 ## Organisation du code
 

@@ -10,7 +10,7 @@ import { pingIndexNow } from "../indexnow";
 import { siteUrl } from "../sites";
 
 // ---------- Étape 1 : propositions ----------
-export type Palette = { label: string; background: string; ink: string; primary: string; accent: string; font: "serif" | "grotesk" };
+export type Palette = { label: string; background: string; ink: string; primary: string; accent: string; font: "serif" | "grotesk" | "kanit" };
 export type Proposal = {
   tagline: string;
   names: { name: string; domain: string; why: string }[];
@@ -21,7 +21,8 @@ export type Proposal = {
 
 const BRAND_SYSTEM = `Tu es directeur artistique et stratège SEO pour de petites boutiques en ligne françaises.
 Noms : courts, faciles à retenir et à épeler, sans marque déposée existante, en français. Domaines en .fr, sans accents, avec tirets si besoin.
-Couleurs : palettes sobres et lisibles (texte foncé sur fond clair, contraste élevé), adaptées à la niche, toutes différentes entre elles. Évite le crème + terracotta et le noir + vert fluo.
+Gabarit : toutes les boutiques utilisent le gabarit « Studio » : fond très sombre, nom de la boutique en lettres géantes (dégradé du gris vers la couleur du texte), images produits qui défilent, bouton principal en dégradé de la couleur principale vers la couleur d'accent, police Kanit.
+Couleurs : pour ce gabarit, un fond presque noir (luminosité < 8 %, ex. #0c0c0c, #0b0d12, #100c0a), un texte très clair légèrement teinté (ex. #d7e2ea, #ece6dc), une couleur principale saturée et une couleur d'accent chaude ou complémentaire qui forment ensemble un beau dégradé (ex. violet #7621b0 vers orange #be4c00). Contraste texte/fond d'au moins 7:1. Adaptées à la niche, toutes différentes entre elles. Évite le noir + vert fluo.
 Produits : une gamme cohérente autour du produit d'appel, 6 à 10 idées vendables en dropshipping.
 Guides : des questions réelles que les gens tapent dans Google, longue traîne, où une boutique neuve peut se classer vite.`;
 
@@ -34,11 +35,11 @@ const BRAND_TOOL = {
     palettes: S.arr(
       S.obj({
         label: S.str("Nom de l'ambiance, 2 ou 3 mots"),
-        background: S.str("Fond, hex"),
-        ink: S.str("Texte, hex foncé"),
-        primary: S.str("Couleur principale (boutons), hex"),
-        accent: S.str("Couleur d'accent, hex"),
-        font: S.enumOf(["serif", "grotesk"], "serif = artisanal, grotesk = moderne"),
+        background: S.str("Fond presque noir, hex"),
+        ink: S.str("Texte très clair, hex"),
+        primary: S.str("Couleur principale saturée (début du dégradé des boutons), hex"),
+        accent: S.str("Couleur d'accent (fin du dégradé), hex"),
+        font: S.enumOf(["kanit", "grotesk", "serif"], "kanit = police du gabarit Studio (conseillée), grotesk = moderne, serif = artisanal"),
       }),
       "3 palettes",
     ),
@@ -196,6 +197,7 @@ Cherche pour chaque produit une fiche chez un fournisseur dropshipping qui livre
       primary: input.palette.primary,
       accent: input.palette.accent,
       font: input.palette.font,
+      template: "studio",
     },
     legal: { ...legal, email: `contact@${input.domain}` },
     shipping: { flat_cents: input.flat_cents, free_from_cents: input.free_from_cents, delay: input.delay, countries: input.countries },
@@ -309,9 +311,9 @@ function demoProposal({ niche, product }: { niche: string; product: string }): P
       { name: `Le Petit ${word}`, domain: `le-petit-${base}.fr`, why: "Chaleureux, adapté à une petite boutique spécialisée." },
     ],
     palettes: [
-      { label: "Sauge et laiton", background: "#f1f4ef", ink: "#18241c", primary: "#2f5d46", accent: "#b38b1d", font: "serif" },
-      { label: "Encre et corail", background: "#f4f6fa", ink: "#1b2333", primary: "#26408f", accent: "#e0663f", font: "grotesk" },
-      { label: "Prune et miel", background: "#f6f2f7", ink: "#2a1d2e", primary: "#6b3a78", accent: "#d39b2a", font: "serif" },
+      { label: "Nuit et braise", background: "#0c0c0c", ink: "#d7e2ea", primary: "#7621b0", accent: "#be4c00", font: "kanit" },
+      { label: "Abysse et corail", background: "#0b0d12", ink: "#e3e8f2", primary: "#1f4fd1", accent: "#e0663f", font: "kanit" },
+      { label: "Forêt et laiton", background: "#0a0f0c", ink: "#e4ece4", primary: "#1f7a52", accent: "#c99a2e", font: "kanit" },
     ],
     products: [product, `${product}, lot de 2`, `Housse de rechange pour ${product.toLowerCase()}`, `Coffret cadeau ${niche.toLowerCase()}`, `Accessoire de rangement ${niche.toLowerCase()}`, `${product}, format voyage`].map(
       (t) => ({ title: cap(t), why: "Complète la gamme (mode démo)." }),

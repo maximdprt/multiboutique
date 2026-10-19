@@ -3,7 +3,14 @@ import type { CSSProperties, ReactNode } from "react";
 import "@fontsource-variable/instrument-sans";
 import "@fontsource-variable/newsreader";
 import "@fontsource-variable/schibsted-grotesk";
+import "@fontsource/kanit/300.css";
+import "@fontsource/kanit/400.css";
+import "@fontsource/kanit/500.css";
+import "@fontsource/kanit/700.css";
+import "@fontsource/kanit/800.css";
+import "@fontsource/kanit/900.css";
 import "./store.css";
+import "./studio.css";
 import { siteFromHost, siteUrl, storeBase } from "@/lib/sites";
 import { CartLink, CartProvider } from "@/components/cart";
 import { StoreLink, StoreProvider } from "@/components/store";
@@ -61,8 +68,12 @@ export default async function StoreLayout({ children, params }: Props) {
   const vars = { "--bg": t.background, "--ink": t.ink, "--primary": t.primary, "--accent": t.accent } as CSSProperties;
 
   return (
-    <html lang="fr" data-font={t.font} style={vars}>
+    <html lang="fr" data-font={t.font} data-template={t.template ?? "classique"} style={vars}>
       <body>
+        {/* Sans JavaScript, les éléments animés du gabarit Studio restent visibles. */}
+        <noscript>
+          <style>{".fade{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
         <StoreProvider siteId={site.id} base={base}>
         <CartProvider siteId={site.id}>
           {/* Les visites de l'aperçu ne comptent pas dans les statistiques. */}
@@ -82,6 +93,11 @@ export default async function StoreLayout({ children, params }: Props) {
               </StoreLink>
               <nav className="nav" aria-label="Navigation principale">
                 <StoreLink href="/produits">Produits</StoreLink>
+                {t.template === "studio" && (
+                  <StoreLink href="/#a-propos" className="hide-sm">
+                    À propos
+                  </StoreLink>
+                )}
                 <StoreLink href="/guides" className="hide-sm">
                   Guides
                 </StoreLink>

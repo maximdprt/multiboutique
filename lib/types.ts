@@ -12,8 +12,15 @@ export type SiteTheme = {
   primary: string;
   /** Couleur secondaire (prix barrés, badges) */
   accent: string;
-  /** Police des titres */
-  font: "serif" | "grotesk";
+  /** Police des titres (kanit = police du gabarit Studio) */
+  font: "serif" | "grotesk" | "kanit";
+  /**
+   * Gabarit de la boutique :
+   *  - classique : clair et sobre (par défaut pour les boutiques existantes) ;
+   *  - studio : sombre, typographie géante en dégradé, images qui défilent avec la page,
+   *    produits phares en cartes empilées (boutiques créées par l'agent).
+   */
+  template?: "classique" | "studio";
 };
 
 export type SiteLegal = {

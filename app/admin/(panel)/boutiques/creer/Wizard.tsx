@@ -1,6 +1,7 @@
 "use client";
 // Assistant de création : 1. la niche  2. vos choix (nom, couleurs, produits, guides, livraison)  3. l'agent construit.
 import { useEffect, useState } from "react";
+import "@fontsource/kanit/800.css";
 import { buildAction, proposeAction, runStatus } from "../../../agent-actions";
 import type { Palette, Proposal } from "@/lib/agents/builder";
 import type { AgentRun } from "@/lib/types";
@@ -222,6 +223,7 @@ export function Wizard({ demo, initial, ideas, defaults }: { demo: boolean; init
 
           <div className="form-section">
             <h2>Les couleurs</h2>
+            <p>La boutique utilise le gabarit Studio : fond sombre, nom en très grand, bouton en dégradé de la couleur principale vers l&apos;accent.</p>
             <div className="choices">
               {prop.palettes.map((p, i) => (
                 <button key={p.label} type="button" className="choice" aria-pressed={palIdx === i} onClick={() => setPalIdx(i)}>
@@ -231,10 +233,22 @@ export function Wizard({ demo, initial, ideas, defaults }: { demo: boolean; init
                       <i key={c} style={{ background: c }} />
                     ))}
                   </div>
-                  <div className="preview-mini" style={{ background: p.background, color: p.ink, fontFamily: p.font === "serif" ? "Georgia, serif" : "inherit" }}>
+                  <div
+                    className="preview-mini"
+                    style={{
+                      background: p.background,
+                      color: p.ink,
+                      fontFamily: p.font === "serif" ? "Georgia, serif" : p.font === "kanit" ? "Kanit, system-ui, sans-serif" : "inherit",
+                      fontWeight: p.font === "kanit" ? 800 : undefined,
+                      textTransform: p.font === "kanit" ? "uppercase" : undefined,
+                    }}
+                  >
                     {name || "Votre boutique"}
                     <br />
-                    <span className="btnp" style={{ background: p.primary, fontFamily: "system-ui" }}>
+                    <span
+                      className="btnp"
+                      style={{ background: `linear-gradient(123deg, ${p.primary} 30%, ${p.accent} 100%)`, fontFamily: "system-ui", borderRadius: 999, fontWeight: 500, textTransform: "none" }}
+                    >
                       Ajouter au panier
                     </span>
                   </div>

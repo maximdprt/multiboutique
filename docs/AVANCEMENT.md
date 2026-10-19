@@ -13,6 +13,7 @@ Dernière mise à jour : 19 octobre 2026, fin de la phase 1.
 - **Adresse d'aperçu** de chaque boutique (`/apercu/<id>`), non indexée, navigation et commande comprises (nouveau, phase 1).
 - **Agent Domaines** : ajout du domaine et de `www` à Vercel, DNS à recopier, suivi jusqu'à « En ligne », IndexNow et rappel Search Console / Merchant Center (nouveau, phase 1 ; testé en démo et contre une API Vercel simulée).
 - **`npm run setup`** : installation guidée (nouveau, phase 1).
+- **Gabarit « Studio »** (sombre, nom géant, animations au défilement, cartes empilées) : choisi par boutique dans Réglages > Apparence, utilisé par l'agent de construction pour toutes les nouvelles boutiques. Exemple dans la démo : Chat Perché. Vérifié par `npm run rendu` sur ordinateur et mobile.
 - Commandes fournisseur CJ automatiques, suivi des colis, e-mails (Resend), rapport sur Telegram.
 - Agents IA (veille, construction, guides) avec Claude, et leur mode démo.
 

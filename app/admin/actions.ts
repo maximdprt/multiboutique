@@ -142,7 +142,8 @@ export async function saveSite(f: FormData) {
       ink: str(f, "ink") || "#1c1f24",
       primary: str(f, "primary") || "#2d5a43",
       accent: str(f, "accent") || "#b8901f",
-      font: str(f, "font") === "grotesk" ? "grotesk" : "serif",
+      font: (["grotesk", "kanit"] as const).find((x) => x === str(f, "font")) ?? "serif",
+      template: str(f, "template") === "studio" ? "studio" : "classique",
     },
     legal: {
       company: str(f, "company"),

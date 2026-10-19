@@ -109,29 +109,38 @@ export default async function ShopEdit({ params, searchParams }: Props) {
 
         <div className="form-section">
           <h2>Apparence</h2>
-          <p>Choisissez des couleurs bien contrastées : texte foncé sur fond clair.</p>
+          <p>Choisissez des couleurs bien contrastées : texte foncé sur fond clair (Classique) ou texte clair sur fond très sombre (Studio).</p>
           <div className="form-grid three">
             <label className="field">
+              <span>Gabarit</span>
+              <select name="template" defaultValue={s ? (s.theme.template ?? "classique") : "studio"}>
+                <option value="studio">Studio : sombre, nom en très grand, animations au défilement</option>
+                <option value="classique">Classique : clair et sobre</option>
+              </select>
+              <small>Studio : le bouton principal est un dégradé de la couleur principale vers la couleur d&apos;accent.</small>
+            </label>
+            <label className="field">
               <span>Fond</span>
-              <input type="color" name="bg" defaultValue={s?.theme.background ?? "#f4f5f2"} />
+              <input type="color" name="bg" defaultValue={s?.theme.background ?? "#0c0c0c"} />
             </label>
             <label className="field">
               <span>Texte</span>
-              <input type="color" name="ink" defaultValue={s?.theme.ink ?? "#1c1f24"} />
+              <input type="color" name="ink" defaultValue={s?.theme.ink ?? "#d7e2ea"} />
             </label>
             <label className="field">
               <span>Couleur principale</span>
-              <input type="color" name="primary" defaultValue={s?.theme.primary ?? "#2d5a43"} />
+              <input type="color" name="primary" defaultValue={s?.theme.primary ?? "#7621b0"} />
             </label>
             <label className="field">
               <span>Couleur d&apos;accent</span>
-              <input type="color" name="accent" defaultValue={s?.theme.accent ?? "#b8901f"} />
+              <input type="color" name="accent" defaultValue={s?.theme.accent ?? "#be4c00"} />
             </label>
             <label className="field">
               <span>Police des titres</span>
-              <select name="font" defaultValue={s?.theme.font ?? "serif"}>
+              <select name="font" defaultValue={s?.theme.font ?? "kanit"}>
                 <option value="serif">Serif (Newsreader), plutôt maison et artisanal</option>
                 <option value="grotesk">Sans serif (Schibsted Grotesk), plutôt moderne</option>
+                <option value="kanit">Kanit, géométrique et affirmée (gabarit Studio)</option>
               </select>
             </label>
           </div>

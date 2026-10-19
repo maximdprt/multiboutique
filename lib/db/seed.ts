@@ -68,12 +68,14 @@ export const DEMO_SITES: Site[] = [
     hero_text:
       "On sélectionne des accessoires qui répondent à ces besoins sans encombrer votre salon. Livraison en 4 à 6 jours, retours gratuits.",
     hero_product_id: "p-chat-1",
+    // Exemple du gabarit Studio (sombre, Kanit, dégradé violet et orange)
     theme: {
-      background: "#f5f3fa",
-      ink: "#221c33",
-      primary: "#5a3ea6",
-      accent: "#e0663f",
-      font: "grotesk",
+      background: "#0c0c0c",
+      ink: "#d7e2ea",
+      primary: "#7621b0",
+      accent: "#be4c00",
+      font: "kanit",
+      template: "studio",
     },
     legal: {
       company: "Votre Nom — Entrepreneur individuel",

@@ -6,6 +6,7 @@ import { money } from "@/lib/format";
 import { JsonLd, faqLd, organizationLd, websiteLd } from "@/lib/seo";
 import { ProductImage, ProductTile } from "@/components/ProductBits";
 import { StoreLink } from "@/components/store";
+import { StudioHome } from "./StudioHome";
 
 type Props = { params: Promise<{ host: string }> };
 
@@ -29,6 +30,14 @@ export default async function Home({ params }: Props) {
     "Paiement sécurisé par Stripe",
   ];
   const faq = faqLd(site.faq);
+
+  if (site.theme.template === "studio")
+    return (
+      <>
+        <JsonLd data={[organizationLd(site), websiteLd(site), ...(faq ? [faq] : [])]} />
+        <StudioHome site={site} products={products} guides={guides} />
+      </>
+    );
 
   return (
     <>

@@ -2,6 +2,20 @@
 
 Les choix techniques faits en cours de route, avec leur raison. Le plus récent en haut.
 
+## Gabarit « Studio » (19 octobre 2026)
+
+**Les boutiques créées par l'agent utilisent le gabarit Studio, inspiré du modèle de portfolio 3D fourni par le propriétaire.**
+Fond très sombre, police Kanit, nom de la boutique en lettres géantes avec un dégradé, bandeaux d'images qui glissent avec le défilement, présentation révélée lettre par lettre, collections numérotées sur fond blanc, produits phares en cartes empilées, boutons pilule en dégradé. Adapté au commerce : les sections montrent les produits, les collections (catégories, nombre de produits, écart de prix), les faits de livraison et de retour, et mènent toujours vers une fiche ou le catalogue. Les autres pages (catalogue, fiche, panier, guides) reprennent le même style. Le gabarit se choisit par boutique dans **Réglages > Apparence** (`theme.template`, stocké dans le JSON du thème : pas de migration) ; les boutiques existantes restent en « Classique » tant qu'on ne le change pas. Exemple : Chat Perché dans la démo.
+
+**Réalisé sans Tailwind ni Framer Motion.**
+Les règles du projet fixent CSS maison et interdisent de changer de pile sans accord ; et l'objectif Lighthouse ≥ 90 pousse à rester léger. Les effets sont refaits en React + CSS (`components/studio.tsx`, `app/[host]/studio.css`) avec les mêmes réglages que le modèle (délais, distances, aimant 150 px / force 3, repères de défilement 0,8 / 0,2, réduction de 3 % par carte). Ils s'arrêtent si le visiteur demande moins d'animations, et le contenu reste visible sans JavaScript.
+
+**Les couleurs restent celles de chaque boutique.**
+Le dégradé des titres va de « texte mêlé au fond » vers la couleur du texte (#646973 → #BBCCD7 dans le modèle), celui du bouton de la couleur principale vers la couleur d'accent : chaque boutique garde son identité. L'agent propose des palettes sombres compatibles (fond presque noir, texte clair, contraste ≥ 7:1).
+
+**Aucune image du modèle ni d'une autre boutique.**
+Les visuels du modèle (portrait, GIF de motionsites.ai, images de projets) appartiennent à leurs auteurs : ils ne sont pas repris. Le gabarit n'affiche que les images des produits de la boutique. Récupérer les photos des boutiques Shopify observées par la veille est exclu (droit d'auteur des photographes et des marques, règle n° 1 du projet) : la veille ne garde que des faits (titre, prix, date, source). Sources d'images autorisées : celles du fournisseur (CJ autorise leur usage pour la revente), vos propres photos, des visuels générés à partir de la photo fournisseur du produit, fidèles au produit réel.
+
 ## Phase 1 (19 octobre 2026)
 
 **API Vercel et GitHub : routes vérifiées dans la documentation officielle du 19 octobre 2026.**
