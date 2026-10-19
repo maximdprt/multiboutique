@@ -191,7 +191,7 @@ export type Opportunity = {
   site_id: string | null;
 };
 
-export type AgentKind = "veille" | "construction" | "contenu" | "commandes" | "rapport";
+export type AgentKind = "veille" | "construction" | "contenu" | "commandes" | "rapport" | "domaines";
 
 export type AgentRun = {
   id: string;

@@ -14,6 +14,7 @@ const CRON_KIND: Record<string, { kind: AgentKind; name: string }> = {
   "/api/cron/suivi": { kind: "commandes", name: "Suivi des colis" },
   "/api/cron/rapport": { kind: "rapport", name: "Rapport du matin" },
   "/api/cron/contenu": { kind: "contenu", name: "Nouveaux guides" },
+  "/api/cron/domaines": { kind: "domaines", name: "Vérification des domaines" },
 };
 const DAYS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 

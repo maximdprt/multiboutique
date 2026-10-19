@@ -9,6 +9,10 @@
       "schedule": "0 5 * * *"
     },
     {
+      "path": "/api/cron/domaines",
+      "schedule": "0 4 * * *"
+    },
+    {
       "path": "/api/cron/rapport",
       "schedule": "0 5 * * *"
     },

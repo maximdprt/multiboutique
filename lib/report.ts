@@ -7,6 +7,7 @@ import { dayKeyOf } from "./dates";
 import { isCounted } from "./stats";
 import { aiSessions, sumDays } from "./analytics";
 import { moneyRound } from "./format";
+import { domainReport, loadDomainStates } from "./domains";
 import type { Order, Report, ReportTodo } from "./types";
 
 const DAY = 86_400_000;
@@ -72,9 +73,11 @@ export async function buildDailyReport(now = Date.now()): Promise<Omit<Report, "
   if (opportunities.length) todos.push({ level: "info", label: `${opportunities.length} idée(s) de la veille à trier`, href: "/admin/veille" });
   const incomplete = sites.filter((s) => s.active && (!s.legal.siret || /^0{3}/.test(s.legal.siret.replace(/\s/g, "")) || !s.legal.mediator));
   if (incomplete.length) todos.push({ level: "normal", label: `Compléter les informations légales de ${incomplete.map((s) => s.name).join(", ")}`, href: "/admin/boutiques" });
+  const domains = domainReport(sites, await loadDomainStates(sites));
+  todos.push(...domains.todos);
 
   // ---------- Alertes ----------
-  const alerts: string[] = [];
+  const alerts: string[] = [...domains.alerts];
   for (const s of sites.filter((x) => x.active)) {
     const cur = analytics.filter((a) => a.site_id === s.id && a.day === day).reduce((x, a) => x + a.sessions, 0);
     const avg = analytics.filter((a) => a.site_id === s.id && weekKeys.includes(a.day)).reduce((x, a) => x + a.sessions, 0) / 7;

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { euros } from "@/lib/format";
 import { saveSite } from "../../../actions";
+import { PreviewLink, SiteTabs } from "./SiteTabs";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string }> };
 
@@ -29,7 +30,13 @@ export default async function ShopEdit({ params, searchParams }: Props) {
           <h1>{s ? s.name : "Nouvelle boutique"}</h1>
           {s && <p>{s.domain}</p>}
         </div>
+        {s && (
+          <div className="actions">
+            <PreviewLink id={s.id} />
+          </div>
+        )}
       </div>
+      {s && <SiteTabs id={s.id} current="reglages" />}
       {ok && <p className="flash">Boutique enregistrée. Les pages sont à jour.</p>}
 
       <form action={saveSite} className="panel">

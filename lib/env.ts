@@ -54,6 +54,10 @@ export const ENV_FIELDS = {
   TELEGRAM_CHAT_ID: opt(re(/^-?\d+$/, "Un nombre (éventuellement négatif pour un groupe).")),
   ANALYTICS_SALT: opt(z.string().min(16, { error: "Au moins 16 caractères aléatoires." })),
   DEFAULT_SITE: opt(re(/^[a-z0-9-]+$/, "L'identifiant d'une boutique, ex. bocal.")),
+
+  VERCEL_TOKEN: opt(re(/^[A-Za-z0-9_-]{20,}$/, "Jeton trop court ou mal copié (Vercel > Account Settings > Tokens).")),
+  VERCEL_PROJECT_ID: opt(re(/^prj_[A-Za-z0-9]+$/, "Doit commencer par prj_ (Vercel > projet > Settings > General > Project ID).")),
+  VERCEL_TEAM_ID: opt(re(/^team_[A-Za-z0-9]+$/, "Doit commencer par team_ (Vercel > Settings de l'équipe > General > Team ID).")),
 } as const;
 
 export type EnvKey = keyof typeof ENV_FIELDS;
@@ -77,6 +81,8 @@ function rules(s: Source): EnvIssue[] {
   if (has(s, "TELEGRAM_BOT_TOKEN") !== has(s, "TELEGRAM_CHAT_ID"))
     need(has(s, "TELEGRAM_BOT_TOKEN") ? "TELEGRAM_CHAT_ID" : "TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID vont ensemble.");
   if (has(s, "REPORT_EMAIL") && !has(s, "REPORT_FROM")) need("REPORT_FROM", "Obligatoire avec REPORT_EMAIL (expéditeur sur un domaine vérifié dans Resend).");
+  if (has(s, "VERCEL_TOKEN") && !has(s, "VERCEL_PROJECT_ID")) need("VERCEL_PROJECT_ID", "Obligatoire avec VERCEL_TOKEN : c'est le projet auquel les domaines sont ajoutés.");
+  if (has(s, "VERCEL_PROJECT_ID") && !has(s, "VERCEL_TOKEN")) need("VERCEL_TOKEN", "Obligatoire avec VERCEL_PROJECT_ID pour ajouter les domaines automatiquement.");
   if (supabase && s.VERCEL && !has(s, "CRON_SECRET")) need("CRON_SECRET", "Obligatoire sur Vercel : sans lui, les tâches planifiées sont refusées.");
   return out;
 }
@@ -274,9 +280,27 @@ const DEFS: Def[] = [
     todo: ["Générez une clé : node -e \"console.log(require('crypto').randomBytes(16).toString('hex'))\".", "Mettez-la dans INDEXNOW_KEY.", VERCEL_VARS],
   },
   {
+    id: "domaines",
+    name: "Domaines automatiques (Vercel)",
+    role: "Ajoute le domaine de chaque boutique à l'hébergement et suit son état depuis l'onglet Domaine. Gratuit.",
+    vars: ["VERCEL_TOKEN", "VERCEL_PROJECT_ID", "VERCEL_TEAM_ID"],
+    main: ["VERCEL_TOKEN", "VERCEL_PROJECT_ID"],
+    required: () => false,
+    detail: (v) =>
+      v.VERCEL_TOKEN && v.VERCEL_PROJECT_ID
+        ? `Les domaines s'ajoutent depuis l'admin${v.VERCEL_TEAM_ID ? " (projet d'équipe)" : ""}.`
+        : "Les domaines s'ajoutent à la main dans Vercel ; l'admin affiche la marche à suivre.",
+    todo: [
+      "Vercel > Account Settings > Tokens : créez un jeton (portée : votre compte ou l'équipe du projet) et mettez-le dans VERCEL_TOKEN.",
+      "Vercel > projet > Settings > General : copiez le Project ID (prj_…) dans VERCEL_PROJECT_ID.",
+      "Si le projet appartient à une équipe : copiez le Team ID (team_…) dans VERCEL_TEAM_ID.",
+      VERCEL_VARS,
+    ],
+  },
+  {
     id: "cron",
     name: "Tâches planifiées",
-    role: "Veille, suivi des colis, rapport du matin et guides, lancés chaque jour par Vercel.",
+    role: "Veille, suivi des colis, domaines, rapport du matin et guides, lancés chaque jour par Vercel.",
     vars: ["CRON_SECRET"],
     main: ["CRON_SECRET"],
     required: (m) => m === "production",

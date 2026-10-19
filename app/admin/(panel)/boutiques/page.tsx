@@ -90,6 +90,9 @@ export default async function Shops() {
                       <a className="link-blue" href={`/admin/boutiques/${s.id}`}>
                         Réglages
                       </a>
+                      <a className="link-blue" href={`/admin/boutiques/${s.id}/domaine`}>
+                        Domaine
+                      </a>
                       </span>
                     </td>
                     <td className="num">
@@ -108,7 +111,11 @@ export default async function Shops() {
         </div>
       </section>
       <p className="faint" style={{ marginTop: 12, fontSize: "0.86rem" }}>
-        En local, chaque boutique s&apos;ouvre sur http://identifiant.localhost:3000 (par exemple http://{sites[0]?.id ?? "bocal"}.localhost:3000).
+        Avant l&apos;achat de son domaine, chaque boutique s&apos;ouvre sur l&apos;adresse d&apos;aperçu /apercu/identifiant (par exemple{" "}
+        <a className="link-blue" href={`/apercu/${sites[0]?.id ?? "bocal"}`}>
+          /apercu/{sites[0]?.id ?? "bocal"}
+        </a>
+        ), jamais indexée. En local, aussi sur http://identifiant.localhost:3000.
       </p>
     </>
   );

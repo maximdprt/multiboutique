@@ -8,6 +8,7 @@ import { money, moneyRound, number, percent } from "@/lib/format";
 import type { Order } from "@/lib/types";
 import { BarChart } from "../../../BarChart";
 import { Delta, HBars, Metric, PERIOD_LABEL, PeriodSeg, parseDays } from "../../../bits";
+import { PreviewLink, SiteTabs } from "../SiteTabs";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ jours?: string }> };
 
@@ -90,12 +91,11 @@ export default async function SiteOverview({ params, searchParams }: Props) {
           <a className="btn quiet small" href={`/admin/guides${qs({ site: id })}`}>
             Guides
           </a>
-          <a className="btn quiet small" href={`/admin/boutiques/${id}`}>
-            Réglages
-          </a>
+          <PreviewLink id={id} />
           <PeriodSeg days={days} base={`/admin/boutiques/${id}/apercu`} options={[7, 30, 90, 365]} />
         </div>
       </div>
+      <SiteTabs id={id} current="apercu" />
 
       <section className="panel">
         <div className="metrics" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>

@@ -21,6 +21,7 @@ vi.mock("@/lib/db", () => ({
     listGuides: async () => [],
     listRuns: async () => [],
     listOpportunities: async () => state.opportunities,
+    getSetting: async () => null,
   },
 }));
 

@@ -10,7 +10,7 @@ export const maxDuration = 300;
 
 export const metadata = { title: "Agents" };
 
-const KIND = { veille: "Veille", construction: "Construction", contenu: "Contenu", commandes: "Commandes", rapport: "Rapport" } as const;
+const KIND = { veille: "Veille", construction: "Construction", contenu: "Contenu", commandes: "Commandes", rapport: "Rapport", domaines: "Domaines" } as const;
 const STATUS = { en_cours: ["info", "En cours"], termine: ["good", "Terminé"], echec: ["bad", "Échec"] } as const;
 
 function duration(a: string, b: string | null) {

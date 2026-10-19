@@ -22,6 +22,9 @@ const DEMO_ENV = Object.fromEntries(
     "TELEGRAM_CHAT_ID",
     "INDEXNOW_KEY",
     "DEFAULT_SITE",
+    "VERCEL_TOKEN",
+    "VERCEL_PROJECT_ID",
+    "VERCEL_TEAM_ID",
   ].map((k) => [k, ""]),
 );
 

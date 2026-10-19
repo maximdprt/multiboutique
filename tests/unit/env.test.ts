@@ -84,7 +84,7 @@ describe("serviceStatuses", () => {
     const { mode, services } = serviceStatuses({ ...PROD, CJ_PAY_MODE: "carte" });
     const by = Object.fromEntries(services.map((s) => [s.id, s]));
     expect(mode).toBe("production");
-    expect(Object.keys(by)).toEqual(["admin", "supabase", "stripe", "webhook", "cj", "anthropic", "resend", "telegram", "indexnow", "cron", "audience"]);
+    expect(Object.keys(by)).toEqual(["admin", "supabase", "stripe", "webhook", "cj", "anthropic", "resend", "telegram", "indexnow", "domaines", "cron", "audience"]);
     expect(by.supabase).toMatchObject({ state: "ok", required: true });
     expect(by.stripe.detail).toContain("Clé de test");
     expect(by.anthropic).toMatchObject({ state: "absent", required: false });
