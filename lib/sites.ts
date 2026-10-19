@@ -1,7 +1,14 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "./db";
+import { previewBase, previewIdOf } from "./store-path";
 import type { Site } from "./types";
+
+/** Base des liens de la boutique pour ce segment [host] : "" sur son domaine, "/apercu/<id>" en aperçu. */
+export function storeBase(hostParam: string) {
+  const id = previewIdOf(hostParam);
+  return id ? previewBase(id) : "";
+}
 
 export function normalizeHost(host: string) {
   return decodeURIComponent(host)
@@ -17,6 +24,10 @@ export function normalizeHost(host: string) {
  *  - "localhost" ou un domaine inconnu -> DEFAULT_SITE (ou la première boutique en local)
  */
 export const siteFromHost = cache(async (hostParam: string): Promise<Site | null> => {
+  // Aperçu (/apercu/<id>/…) : la boutique s'affiche même hors ligne, pour la vérifier avant de l'ouvrir.
+  const previewId = previewIdOf(hostParam);
+  if (previewId) return db.getSite(previewId);
+
   const host = normalizeHost(hostParam);
   const sites = (await db.listSites()).filter((s) => s.active);
   const exact = sites.find((s) => s.domain === host);

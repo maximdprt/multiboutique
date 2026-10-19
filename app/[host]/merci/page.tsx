@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { siteFromHost } from "@/lib/sites";
 import { ClearCart } from "@/components/cart";
+import { StoreLink } from "@/components/store";
 
 type Props = { params: Promise<{ host: string }>; searchParams: Promise<{ session_id?: string; commande?: string }> };
 
@@ -30,9 +31,9 @@ export default async function Merci({ params, searchParams }: Props) {
           Une question ? Écrivez-nous à <a href={`mailto:${site.legal.email}`}>{site.legal.email}</a>.
         </p>
         <p style={{ marginTop: 28 }}>
-          <a className="btn btn-quiet" href="/">
+          <StoreLink className="btn btn-quiet" href="/">
             Retour à la boutique
-          </a>
+          </StoreLink>
         </p>
       </section>
     </div>

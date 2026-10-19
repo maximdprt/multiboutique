@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useCart, type CartItem } from "./cart";
 import { track } from "./track";
+import { StoreLink } from "./store";
 
 export function AddToCart({ product }: { product: Omit<CartItem, "qty"> }) {
   const { add } = useCart();
@@ -38,7 +39,7 @@ export function AddToCart({ product }: { product: Omit<CartItem, "qty"> }) {
       <p className="added" aria-live="polite">
         {added && (
           <>
-            Ajouté au panier. <a href="/panier">Voir le panier</a>
+            Ajouté au panier. <StoreLink href="/panier">Voir le panier</StoreLink>
           </>
         )}
       </p>

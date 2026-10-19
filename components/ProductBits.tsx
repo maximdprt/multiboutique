@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { money } from "@/lib/format";
+import { StoreLink } from "./store";
 
 export function ProductImage({
   src,
@@ -45,7 +46,7 @@ export function Price({ p }: { p: Pick<Product, "price_cents" | "compare_at_cent
 export function ProductTile({ p, priority }: { p: Product; priority?: boolean }) {
   const promo = p.compare_at_cents && p.compare_at_cents > p.price_cents;
   return (
-    <a className="tile" href={`/produits/${p.slug}`}>
+    <StoreLink className="tile" href={`/produits/${p.slug}`}>
       <div className="media">
         <ProductImage src={p.images[0]} alt={p.title} sizes="(max-width: 900px) 50vw, 380px" priority={priority} />
         {p.stock === 0 ? (
@@ -57,6 +58,6 @@ export function ProductTile({ p, priority }: { p: Product; priority?: boolean })
       <h3>{p.title}</h3>
       {p.subtitle && <p className="sub">{p.subtitle}</p>}
       <Price p={p} />
-    </a>
+    </StoreLink>
   );
 }

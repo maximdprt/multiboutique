@@ -7,6 +7,7 @@ import { RichText, plainText, truncate } from "@/lib/richtext";
 import { JsonLd, breadcrumbLd, faqLd, productLd } from "@/lib/seo";
 import { Price, ProductImage, ProductTile } from "@/components/ProductBits";
 import { AddToCart } from "@/components/AddToCart";
+import { StoreLink } from "@/components/store";
 
 type Props = { params: Promise<{ host: string; slug: string }> };
 
@@ -64,10 +65,10 @@ export default async function ProductPage({ params }: Props) {
         <nav className="crumbs" aria-label="Fil d'Ariane">
           <ol>
             <li>
-              <a href="/">Accueil</a>
+              <StoreLink href="/">Accueil</StoreLink>
             </li>
             <li>
-              <a href="/produits">Produits</a>
+              <StoreLink href="/produits">Produits</StoreLink>
             </li>
             <li aria-current="page">{p.title}</li>
           </ol>
@@ -142,10 +143,10 @@ export default async function ProductPage({ params }: Props) {
                 <ul className="guide-list" style={{ gridTemplateColumns: "1fr" }}>
                   {linkedGuides.map((g) => (
                     <li key={g.id}>
-                      <a href={`/guides/${g.slug}`}>
+                      <StoreLink href={`/guides/${g.slug}`}>
                         <h3>{g.title}</h3>
                         <p>{g.excerpt}</p>
-                      </a>
+                      </StoreLink>
                     </li>
                   ))}
                 </ul>

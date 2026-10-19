@@ -812,3 +812,13 @@ html[data-font="serif"] .article .prose {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* ---------- Bandeau de l'adresse d'aperçu ---------- */
+.preview-bar {
+  margin: 0;
+  padding: 8px 16px;
+  background: #1c1f24;
+  color: #fff;
+  font-size: 0.86rem;
+  text-align: center;
+}

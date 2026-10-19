@@ -4,6 +4,8 @@ import { useEffect } from "react";
 /** Envoie un signal de mesure d'audience (sans cookie, sans identifiant stocké). */
 export function track(t: "pageview" | "add_to_cart" | "checkout") {
   try {
+    // Les visites de l'aperçu (/apercu/<id>/…) ne comptent pas.
+    if (location.pathname.startsWith("/apercu/")) return;
     const u = new URLSearchParams(location.search).get("utm_source") ?? "";
     const body = JSON.stringify({ t, p: location.pathname, r: t === "pageview" ? document.referrer : location.href, u: t === "pageview" ? u : "" });
     if (navigator.sendBeacon) navigator.sendBeacon("/api/collect", new Blob([body], { type: "text/plain" }));

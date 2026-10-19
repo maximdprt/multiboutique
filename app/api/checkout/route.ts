@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { siteFromHost, siteUrl } from "@/lib/sites";
+import { PREVIEW_PREFIX, previewBase } from "@/lib/store-path";
 import { getStripe } from "@/lib/stripe";
 import { priceCart, recordPaidOrder, toOrderItems, type CartLine } from "@/lib/orders";
 
@@ -12,16 +13,19 @@ function origin(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const site = await siteFromHost(req.headers.get("host") ?? "");
-  if (!site) return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
-
   let lines: CartLine[];
+  let previewId: string | null = null;
   try {
     const body = await req.json();
     lines = Array.isArray(body?.items) ? body.items.slice(0, 50) : [];
+    // Panier rempli sur l'adresse d'aperçu (/apercu/<id>/…) : l'adresse ne désigne pas la boutique.
+    if (typeof body?.preview === "string" && /^[a-z0-9-]+$/.test(body.preview)) previewId = body.preview;
   } catch {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
+
+  const site = await siteFromHost(previewId ? PREVIEW_PREFIX + previewId : (req.headers.get("host") ?? ""));
+  if (!site) return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
 
   let cart;
   try {
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
   if (!cart.items.length) return NextResponse.json({ error: "Votre panier est vide." }, { status: 400 });
 
-  const base = origin(req);
+  const base = origin(req) + (previewId ? previewBase(previewId) : "");
   const stripe = getStripe();
 
   // Pas de Stripe : en mode démo on simule un paiement réussi pour tester l'admin.

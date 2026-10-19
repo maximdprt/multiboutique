@@ -5,6 +5,7 @@ import { siteFromHost, siteUrl } from "@/lib/sites";
 import { money } from "@/lib/format";
 import { JsonLd, faqLd, organizationLd, websiteLd } from "@/lib/seo";
 import { ProductImage, ProductTile } from "@/components/ProductBits";
+import { StoreLink } from "@/components/store";
 
 type Props = { params: Promise<{ host: string }> };
 
@@ -39,18 +40,18 @@ export default async function Home({ params }: Props) {
             <h1>{site.hero_title}</h1>
             <p className="hero-text">{site.hero_text}</p>
             <div className="hero-actions">
-              <a className="btn" href="/produits">
+              <StoreLink className="btn" href="/produits">
                 Voir les produits
-              </a>
+              </StoreLink>
               {guides[0] && (
-                <a className="btn btn-quiet" href={`/guides/${guides[0].slug}`}>
+                <StoreLink className="btn btn-quiet" href={`/guides/${guides[0].slug}`}>
                   Lire nos conseils
-                </a>
+                </StoreLink>
               )}
             </div>
           </div>
           {hero && (
-            <a className="hero-pick" href={`/produits/${hero.slug}`}>
+            <StoreLink className="hero-pick" href={`/produits/${hero.slug}`}>
               <figure>
                 <div className="media">
                   <ProductImage src={hero.images[0]} alt={hero.title} sizes="(max-width: 820px) 100vw, 520px" priority />
@@ -60,7 +61,7 @@ export default async function Home({ params }: Props) {
                   <span>{money(hero.price_cents)}</span>
                 </figcaption>
               </figure>
-            </a>
+            </StoreLink>
           )}
         </div>
       </section>
@@ -77,7 +78,7 @@ export default async function Home({ params }: Props) {
         <div className="wrap">
           <div className="section-head">
             <h2 id="produits">Les produits</h2>
-            <a href="/produits">Tout voir</a>
+            <StoreLink href="/produits">Tout voir</StoreLink>
           </div>
           <div className="grid">
             {products.slice(0, 6).map((p, i) => (
@@ -92,15 +93,15 @@ export default async function Home({ params }: Props) {
           <div className="wrap">
             <div className="section-head">
               <h2 id="guides">Guides et conseils</h2>
-              <a href="/guides">Tous les guides</a>
+              <StoreLink href="/guides">Tous les guides</StoreLink>
             </div>
             <ul className="guide-list">
               {guides.slice(0, 4).map((g) => (
                 <li key={g.id}>
-                  <a href={`/guides/${g.slug}`}>
+                  <StoreLink href={`/guides/${g.slug}`}>
                     <h3>{g.title}</h3>
                     <p>{g.excerpt}</p>
-                  </a>
+                  </StoreLink>
                 </li>
               ))}
             </ul>

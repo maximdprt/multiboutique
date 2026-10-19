@@ -6,6 +6,7 @@ import { date } from "@/lib/format";
 import { RichText, plainText, truncate } from "@/lib/richtext";
 import { JsonLd, articleLd, breadcrumbLd } from "@/lib/seo";
 import { ProductTile } from "@/components/ProductBits";
+import { StoreLink } from "@/components/store";
 
 type Props = { params: Promise<{ host: string; slug: string }> };
 
@@ -54,10 +55,10 @@ export default async function GuidePage({ params }: Props) {
         <nav className="crumbs" aria-label="Fil d'Ariane">
           <ol>
             <li>
-              <a href="/">Accueil</a>
+              <StoreLink href="/">Accueil</StoreLink>
             </li>
             <li>
-              <a href="/guides">Guides</a>
+              <StoreLink href="/guides">Guides</StoreLink>
             </li>
             <li aria-current="page">{g.title}</li>
           </ol>

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { siteFromHost, siteUrl } from "@/lib/sites";
 import { date } from "@/lib/format";
+import { StoreLink } from "@/components/store";
 
 type Props = { params: Promise<{ host: string }> };
 
@@ -31,11 +32,11 @@ export default async function Guides({ params }: Props) {
           <ul className="guide-list">
             {guides.map((g) => (
               <li key={g.id}>
-                <a href={`/guides/${g.slug}`}>
+                <StoreLink href={`/guides/${g.slug}`}>
                   <h3>{g.title}</h3>
                   <p>{g.excerpt}</p>
                   <p style={{ fontSize: "0.9rem" }}>Mis à jour le {date(g.updated_at)}</p>
-                </a>
+                </StoreLink>
               </li>
             ))}
           </ul>

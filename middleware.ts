@@ -2,8 +2,10 @@
 //   bocal-et-cie.fr/produits/x  ->  /bocal-et-cie.fr/produits/x  (app/[host]/...)
 //   n'importe-quel-domaine/admin -> l'admin (protégé par mot de passe)
 //   ADMIN_HOST (ex. admin.mondomaine.fr) -> uniquement l'admin
+//   n'importe-quel-domaine/apercu/bocal/x -> aperçu de la boutique "bocal" (/apercu~bocal/x), jamais indexé
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "./lib/auth";
+import { PREVIEW_PREFIX, parsePreviewPath } from "./lib/store-path";
 
 const SITE_FILES = new Set(["/sitemap.xml", "/robots.txt", "/llms.txt", "/feed.xml"]);
 
@@ -24,6 +26,14 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(login);
     }
     const res = NextResponse.next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return res;
+  }
+
+  // Adresse d'aperçu d'une boutique (avant l'achat du domaine) : jamais indexée par les moteurs.
+  const preview = parsePreviewPath(path);
+  if (preview) {
+    const res = NextResponse.rewrite(new URL(`/${encodeURIComponent(PREVIEW_PREFIX + preview.id)}${preview.rest}${url.search}`, req.url));
     res.headers.set("X-Robots-Tag", "noindex, nofollow");
     return res;
   }

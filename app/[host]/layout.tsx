@@ -4,8 +4,9 @@ import "@fontsource-variable/instrument-sans";
 import "@fontsource-variable/newsreader";
 import "@fontsource-variable/schibsted-grotesk";
 import "./store.css";
-import { siteFromHost, siteUrl } from "@/lib/sites";
+import { siteFromHost, siteUrl, storeBase } from "@/lib/sites";
 import { CartLink, CartProvider } from "@/components/cart";
+import { StoreLink, StoreProvider } from "@/components/store";
 import { PageviewTracker } from "@/components/track";
 import { LEGAL_PAGES } from "./legal";
 
@@ -19,9 +20,12 @@ function favicon(letter: string, color: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const site = await siteFromHost((await params).host);
+  const { host } = await params;
+  const site = await siteFromHost(host);
   if (!site) return { title: "Boutique introuvable", robots: { index: false } };
   return {
+    // Aperçu : jamais indexé (le middleware ajoute aussi l'en-tête X-Robots-Tag).
+    ...(storeBase(host) ? { robots: { index: false, follow: false } } : {}),
     metadataBase: new URL(siteUrl(site)),
     title: { default: `${site.name} — ${site.tagline}`, template: `%s | ${site.name}` },
     description: site.description,
@@ -38,7 +42,9 @@ export async function generateViewport({ params }: Props): Promise<Viewport> {
 }
 
 export default async function StoreLayout({ children, params }: Props) {
-  const site = await siteFromHost((await params).host);
+  const { host } = await params;
+  const site = await siteFromHost(host);
+  const base = storeBase(host);
 
   if (!site) {
     return (
@@ -57,21 +63,28 @@ export default async function StoreLayout({ children, params }: Props) {
   return (
     <html lang="fr" data-font={t.font} style={vars}>
       <body>
+        <StoreProvider siteId={site.id} base={base}>
         <CartProvider siteId={site.id}>
-          <PageviewTracker />
+          {/* Les visites de l'aperçu ne comptent pas dans les statistiques. */}
+          {!base && <PageviewTracker />}
+          {base && (
+            <p className="preview-bar" role="status">
+              Aperçu{site.active ? "" : " d'une boutique hors ligne"} : cette adresse n&apos;est pas indexée par les moteurs de recherche.
+            </p>
+          )}
           <a className="skip" href="#contenu">
             Aller au contenu
           </a>
           <header className="site-header">
             <div className="wrap">
-              <a className="wordmark" href="/">
+              <StoreLink className="wordmark" href="/">
                 {site.name}
-              </a>
+              </StoreLink>
               <nav className="nav" aria-label="Navigation principale">
-                <a href="/produits">Produits</a>
-                <a href="/guides" className="hide-sm">
+                <StoreLink href="/produits">Produits</StoreLink>
+                <StoreLink href="/guides" className="hide-sm">
                   Guides
-                </a>
+                </StoreLink>
                 <CartLink />
               </nav>
             </div>
@@ -87,10 +100,10 @@ export default async function StoreLayout({ children, params }: Props) {
                 <strong>La boutique</strong>
                 <ul>
                   <li>
-                    <a href="/produits">Tous les produits</a>
+                    <StoreLink href="/produits">Tous les produits</StoreLink>
                   </li>
                   <li>
-                    <a href="/guides">Guides et conseils</a>
+                    <StoreLink href="/guides">Guides et conseils</StoreLink>
                   </li>
                   <li>
                     <a href={`mailto:${site.legal.email}`}>{site.legal.email}</a>
@@ -102,7 +115,7 @@ export default async function StoreLayout({ children, params }: Props) {
                 <ul>
                   {Object.entries(LEGAL_PAGES).map(([slug, page]) => (
                     <li key={slug}>
-                      <a href={`/${slug}`}>{page.title}</a>
+                      <StoreLink href={`/${slug}`}>{page.title}</StoreLink>
                     </li>
                   ))}
                 </ul>
@@ -110,6 +123,7 @@ export default async function StoreLayout({ children, params }: Props) {
             </div>
           </footer>
         </CartProvider>
+        </StoreProvider>
       </body>
     </html>
   );

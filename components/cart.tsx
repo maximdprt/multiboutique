@@ -2,6 +2,7 @@
 // Panier stocké dans le navigateur (localStorage), un panier par boutique.
 // Les prix affichés ici sont indicatifs : le serveur recalcule tout au moment du paiement.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { StoreLink } from "./store";
 
 export type CartItem = { id: string; slug: string; title: string; price_cents: number; image: string; qty: number; max: number | null };
 
@@ -76,10 +77,10 @@ export function useCart() {
 export function CartLink() {
   const { count, ready } = useCart();
   return (
-    <a href="/panier" className="cart-link" aria-label={ready ? `Panier, ${count} article${count > 1 ? "s" : ""}` : "Panier"}>
+    <StoreLink href="/panier" className="cart-link" aria-label={ready ? `Panier, ${count} article${count > 1 ? "s" : ""}` : "Panier"}>
       Panier
       {ready && count > 0 && <span className="cart-count">{count}</span>}
-    </a>
+    </StoreLink>
   );
 }
 

@@ -4,9 +4,11 @@ import Image from "next/image";
 import { useCart } from "./cart";
 import { money } from "@/lib/format";
 import { track } from "./track";
+import { StoreLink, useStore } from "./store";
 
 export function CartView({ flat, freeFrom }: { flat: number; freeFrom: number }) {
   const { items, ready, subtotal, setQty, remove } = useCart();
+  const { preview, siteId } = useStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -15,9 +17,9 @@ export function CartView({ flat, freeFrom }: { flat: number; freeFrom: number })
     return (
       <div className="empty">
         <p>Votre panier est vide.</p>
-        <a className="btn" href="/produits">
+        <StoreLink className="btn" href="/produits">
           Voir les produits
-        </a>
+        </StoreLink>
       </div>
     );
 
@@ -32,7 +34,8 @@ export function CartView({ flat, freeFrom }: { flat: number; freeFrom: number })
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: items.map((i) => ({ id: i.id, qty: i.qty })) }),
+        // En aperçu, l'adresse ne désigne pas la boutique : on la précise.
+        body: JSON.stringify({ items: items.map((i) => ({ id: i.id, qty: i.qty })), ...(preview ? { preview: siteId } : {}) }),
       });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error || "Le paiement n'a pas pu démarrer.");
@@ -48,13 +51,13 @@ export function CartView({ flat, freeFrom }: { flat: number; freeFrom: number })
       <ul className="cart-lines">
         {items.map((i) => (
           <li key={i.id}>
-            <a className="media" href={`/produits/${i.slug}`} aria-label={i.title}>
+            <StoreLink className="media" href={`/produits/${i.slug}`} aria-label={i.title}>
               {i.image && <Image src={i.image} alt="" fill sizes="88px" unoptimized={i.image.endsWith(".svg")} />}
-            </a>
+            </StoreLink>
             <div>
-              <a href={`/produits/${i.slug}`} style={{ textDecoration: "none", fontWeight: 600 }}>
+              <StoreLink href={`/produits/${i.slug}`} style={{ textDecoration: "none", fontWeight: 600 }}>
                 {i.title}
-              </a>
+              </StoreLink>
               <div style={{ marginTop: 10, display: "flex", alignItems: "center" }}>
                 <div className="qty" role="group" aria-label={`Quantité pour ${i.title}`}>
                   <button type="button" aria-label="Retirer un" onClick={() => (i.qty > 1 ? setQty(i.id, i.qty - 1) : remove(i.id))}>
