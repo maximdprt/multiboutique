@@ -168,6 +168,10 @@ La CI GitHub lance tout cela à chaque envoi de code. Le fonctionnement détaill
 
 ---
 
+### Voir le rendu
+
+`npm run rendu` parcourt la boutique exemple (Bocal & Cie) et l'admin sur ordinateur et sur mobile, vérifie le rendu de chaque page et enregistre les captures : ouvrez ensuite `rendu/index.html` dans votre navigateur.
+
 ## Organisation du code
 
 ```

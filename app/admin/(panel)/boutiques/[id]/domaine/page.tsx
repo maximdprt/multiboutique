@@ -144,10 +144,18 @@ export default async function SiteDomain({ params, searchParams }: Props) {
                       <b>{r.type}</b>
                     </td>
                     <td>
-                      <code>{r.name}</code> <CopyButton value={r.name} />
+                      <span className="copy-cell">
+                        <code>{r.name}</code>
+                        <CopyButton value={r.name} />
+                      </span>
                     </td>
-                    <td className="ellip" style={{ maxWidth: 340 }}>
-                      <code>{r.value}</code> <CopyButton value={r.value} />
+                    <td>
+                      <span className="copy-cell">
+                        <code className="ellip" title={r.value}>
+                          {r.value}
+                        </code>
+                        <CopyButton value={r.value} />
+                      </span>
                     </td>
                     <td className="muted">{r.why}</td>
                     <td>

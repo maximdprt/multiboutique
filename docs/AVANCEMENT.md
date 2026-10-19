@@ -45,6 +45,7 @@ Dernière mise à jour : 19 octobre 2026, fin de la phase 1.
 - Adresse d'aperçu `https://<adresse>/apercu/<id>/…` (middleware, `lib/store-path.ts`, `components/store.tsx`) : noindex (en-tête et balise), bandeau « Aperçu », liens qui gardent le préfixe, paiement qui revient sur l'aperçu, visites non comptées. Lien « Voir l'aperçu » sur la fiche boutique.
 - Nouvelles variables : `VERCEL_TOKEN`, `VERCEL_PROJECT_ID`, `VERCEL_TEAM_ID`, `APP_URL`, `GITHUB_TOKEN`, `GITHUB_REPO` (`.env.example`, `lib/env.ts`, service « Domaines automatiques » dans État des services).
 - Tests : `store-path`, `domains` (API Vercel simulée), `setup` ; Playwright : aperçu et onglet Domaine.
+- Test de rendu `npm run rendu` (boutique exemple + admin, ordinateur et mobile, captures dans `rendu/`). Il a trouvé deux défauts, corrigés : bouton « Se déconnecter » sans nom accessible, bouton « Copier » qui passait à la ligne dans le tableau DNS.
 
 ## Phase 0 : ce qui a été fait
 

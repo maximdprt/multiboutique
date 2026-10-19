@@ -120,6 +120,7 @@ Sécurité de la base : la sécurité au niveau des lignes (RLS) est activée su
 | `npm run lint` | Les règles de code (ESLint, configuration Next.js) |
 | `npm test` | Les calculs : statistiques, rapport du matin, prix et livraison, mise en forme des textes, sources de visites, variables d'environnement, migrations, adresse d'aperçu, agent Domaines (API Vercel simulée), fonctions de `npm run setup` |
 | `npm run test:e2e` | Dans un vrai navigateur, en mode démo : connexion à l'admin, commande de bout en bout jusqu'à l'envoi fournisseur simulé, tri d'une carte de veille, page État des services, navigation et commande sur l'adresse d'aperçu, ajout d'un domaine jusqu'à « En ligne » |
+| `npm run rendu` | Test de rendu d'une boutique exemple (Bocal & Cie) et de l'admin, sur ordinateur (1440 px) et mobile (Pixel 7) : aucun débordement, images chargées, couleurs du thème, un titre principal, liens nommés, aucune erreur ; une capture par page dans `rendu/` et une planche `rendu/index.html`. Pas lancé par la CI (les captures dépendent du système). |
 | `npm run build` | La compilation de production |
 
 La CI GitHub (`.github/workflows/ci.yml`) lance tout cela à chaque envoi de code.

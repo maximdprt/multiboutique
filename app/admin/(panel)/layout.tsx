@@ -32,7 +32,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
             <span className="lbl">Créer une boutique</span>
           </a>
           <form action={logout}>
-            <button className="top-btn" type="submit" title="Se déconnecter">
+            <button className="top-btn" type="submit" title="Se déconnecter" aria-label="Se déconnecter">
               <Icon name="logout" size={16} />
             </button>
           </form>

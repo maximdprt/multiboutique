@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "rendu": "playwright test --config playwright.rendu.config.ts",
     "db:migrate": "node scripts/db-migrate.mjs",
     "seed:supabase": "node scripts/seed-supabase.mjs"
   },

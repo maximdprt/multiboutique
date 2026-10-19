@@ -218,7 +218,7 @@ function demoChecks(step: number) {
 
 async function finish(site: Site, prev: DomainState, next: DomainState, log: (s: string) => void) {
   next.checked_at = new Date().toISOString();
-  if (!next.message) next.message = MESSAGES[next.status] + (next.mode === "demo" ? " (simulation du mode démo)" : "");
+  if (!next.message) next.message = MESSAGES[next.status];
   if (next.status === "en_ligne" && prev.status !== "en_ligne") {
     next.online_since ??= next.checked_at;
     log(`${site.domain} est en ligne.`);
