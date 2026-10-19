@@ -57,6 +57,7 @@ export const ENV_FIELDS = {
 
   VERCEL_TOKEN: opt(re(/^[A-Za-z0-9_-]{20,}$/, "Jeton trop court ou mal copié (Vercel > Account Settings > Tokens).")),
   VERCEL_PROJECT_ID: opt(re(/^prj_[A-Za-z0-9]+$/, "Doit commencer par prj_ (Vercel > projet > Settings > General > Project ID).")),
+  APP_URL: opt(re(/^https?:\/\/[^\s/]+\/?$/, "L'adresse du site, sans chemin, ex. https://multiboutique.vercel.app.")),
   VERCEL_TEAM_ID: opt(re(/^team_[A-Za-z0-9]+$/, "Doit commencer par team_ (Vercel > Settings de l'équipe > General > Team ID).")),
 } as const;
 
