@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   poweredByHeader: false,
+  // Envoi de photos depuis l'admin (12 photos de 20 Mo au plus par envoi, compressées ensuite)
+  experimental: { serverActions: { bodySizeLimit: "50mb" } },
 };
 
 export default nextConfig;

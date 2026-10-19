@@ -463,17 +463,247 @@ p {
     grid-template-columns: 1fr;
   }
 }
-.gallery .media {
-  aspect-ratio: 1;
+/* ---------- Galerie produit ---------- */
+.gallery {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
 }
-.thumbs {
+.gallery-empty {
+  aspect-ratio: 1;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+.g-stage {
+  position: relative;
+}
+.g-track {
   display: flex;
-  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--radius);
+}
+.g-track::-webkit-scrollbar {
+  display: none;
+}
+.g-slide {
+  flex: 0 0 100%;
+  aspect-ratio: 1;
+  scroll-snap-align: start;
+  border: 0;
+  padding: 0;
+  cursor: zoom-in;
+  border-radius: 0;
+}
+.g-slide img {
+  transition: transform 0.25s ease-out;
+}
+.g-arrow {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 0;
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  color: var(--ink);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+.g-prev {
+  left: 12px;
+}
+.g-next {
+  right: 12px;
+}
+.g-stage:hover .g-arrow,
+.g-arrow:focus-visible {
+  opacity: 1;
+}
+.g-count {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background: color-mix(in oklab, var(--bg) 85%, transparent);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.g-dots {
+  display: none;
+  justify-content: center;
+  gap: 6px;
   margin-top: 10px;
 }
-.thumbs .media {
-  width: 76px;
+.g-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--line);
+  transition: width 0.2s, background 0.2s;
+}
+.g-dots i.on {
+  width: 18px;
+  background: var(--ink);
+}
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.g-thumb {
   aspect-ratio: 1;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+.g-thumb:hover,
+.g-thumb[aria-current="true"] {
+  opacity: 1;
+}
+.g-thumb[aria-current="true"] {
+  border-color: var(--ink);
+}
+@media (max-width: 860px) {
+  .gallery {
+    position: static;
+    margin: 0 -24px;
+  }
+  .g-track {
+    border-radius: 0;
+  }
+  .g-arrow,
+  .thumbs {
+    display: none;
+  }
+  .g-dots {
+    display: flex;
+  }
+}
+@media (max-width: 640px) {
+  .gallery {
+    margin: 0 -16px;
+  }
+}
+.g-lightbox {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(10, 10, 10, 0.96);
+  color: #fff;
+}
+.g-lightbox::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+.g-lb-img {
+  position: absolute;
+  inset: 48px 16px;
+}
+.g-lb-img img {
+  object-fit: contain;
+}
+.g-lb-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+}
+.g-lightbox .g-arrow {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.g-lightbox .g-count {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ---------- Réassurance et barre d'achat mobile ---------- */
+.trust {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 0.92rem;
+}
+.trust li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.trust svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+.sticky-buy {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: color-mix(in oklab, var(--bg) 94%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  translate: 0 110%;
+  transition: translate 0.25s ease-out;
+}
+.sticky-buy.on {
+  translate: 0 0;
+}
+.sticky-buy div {
+  display: grid;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+.sticky-buy b {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sticky-buy .btn {
+  flex: none;
+  padding: 11px 18px;
+}
+@media (max-width: 860px) {
+  .sticky-buy {
+    display: flex;
+  }
 }
 .buy {
   position: sticky;

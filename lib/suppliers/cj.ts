@@ -9,7 +9,16 @@ export const hasCJ = () => Boolean(process.env.CJ_API_KEY);
 type Token = { accessToken: string; accessTokenExpiryDate: string; refreshToken: string; refreshTokenExpiryDate: string };
 type CJResponse<T> = { code: number; result: boolean; message: string; data: T };
 
+// Compte gratuit : 1 requête par seconde au plus (au-delà, CJ répond 429). On espace les appels.
+let nextSlot = 0;
+async function throttle() {
+  const wait = nextSlot - Date.now();
+  nextSlot = Math.max(Date.now(), nextSlot) + 1100;
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+}
+
 async function call<T>(path: string, init: RequestInit & { token?: string } = {}): Promise<T> {
+  await throttle();
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
@@ -107,3 +116,87 @@ export async function orderDetail(orderId: string) {
     { method: "GET", token: tk },
   );
 }
+
+// ---------- Fiches produits (images, variantes) ----------
+
+/** Identifiant produit CJ (pid) dans une adresse du type https://cjdropshipping.com/product/nom-p-1234ABCD-….html */
+export function pidFromUrl(url: string) {
+  const m = /-p-([0-9A-Za-z-]{8,})\.html/.exec(url) ?? /[?&]pid=([0-9A-Za-z-]{8,})/.exec(url);
+  return m ? m[1] : null;
+}
+
+/** Liste d'images CJ : tableau, texte JSON ou texte séparé par des virgules selon les réponses. */
+export function imageList(v: unknown): string[] {
+  if (Array.isArray(v)) return v.filter((x): x is string => typeof x === "string" && /^https?:\/\//.test(x));
+  if (typeof v !== "string" || !v.trim()) return [];
+  const t = v.trim();
+  if (t.startsWith("[")) {
+    try {
+      return imageList(JSON.parse(t));
+    } catch {
+      // texte mal formé : on tente le découpage simple
+    }
+  }
+  return t.split(/[,\s]+/).filter((x) => /^https?:\/\//.test(x));
+}
+
+type CJVariant = { vid: string; pid?: string; variantImage?: string; variantSku?: string; variantNameEn?: string };
+// GET /product/query : la photo principale est « bigImage » ; « productImageSet » est la galerie (tableau d'adresses)
+type CJProduct = { pid: string; productNameEn?: string; bigImage?: string; productImageSet?: unknown; variants?: CJVariant[]; description?: string };
+
+/** Images d'un produit CJ (par variante ou par adresse) : photo de la variante d'abord, puis la galerie du produit. */
+export async function productImages(opts: { vid?: string; url?: string }) {
+  const tk = await token();
+  let pid = opts.url ? pidFromUrl(opts.url) : null;
+  let variant: CJVariant | null = null;
+  if (opts.vid) {
+    variant = await call<CJVariant>(`/product/variant/queryByVid?vid=${encodeURIComponent(opts.vid)}`, { method: "GET", token: tk }).catch(() => null);
+    pid ??= variant?.pid ?? null;
+  }
+  if (!pid) throw new Error("produit introuvable chez CJ : vérifiez l'identifiant de variante (vid) ou l'adresse du produit");
+  const p = await call<CJProduct>(`/product/query?pid=${encodeURIComponent(pid)}`, { method: "GET", token: tk });
+  variant ??= p.variants?.find((v) => v.vid === opts.vid) ?? null;
+  const variantImage = variant?.variantImage && /^https?:\/\//.test(variant.variantImage) ? variant.variantImage : null;
+  const gallery = [...new Set([...(variantImage ? [variantImage] : []), ...imageList(p.bigImage), ...imageList(p.productImageSet)])];
+  // Les images de la description portent souvent du texte publicitaire (parfois en chinois) :
+  // seulement si la galerie est trop pauvre
+  const fromDescription = [...(p.description ?? "").matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].map((m) => m[1]).filter((u) => /^https?:\/\//.test(u));
+  const images = gallery.length >= 3 ? gallery : [...new Set([...gallery, ...fromDescription])];
+  return { pid, name: p.productNameEn ?? "", images, variantImage };
+}
+
+// ---------- Recherche dans le catalogue CJ (agent Catalogue) ----------
+
+export type CJSearchItem = { pid: string; name: string; image: string; sellPriceUsd: number; listedNum: number; inventory: number; category: string };
+
+/** GET /product/listV2 : produits correspondant à des mots-clés anglais, les plus vendus en premier. */
+export async function searchProducts(keyWord: string, size = 10): Promise<CJSearchItem[]> {
+  const tk = await token();
+  const q = new URLSearchParams({ keyWord, page: "1", size: String(size), orderBy: "1", sort: "desc", countryCode: "FR" });
+  type Raw = { id: string; nameEn?: string; bigImage?: string; sellPrice?: string | number; nowPrice?: string | number; listedNum?: number; warehouseInventoryNum?: number; threeCategoryName?: string };
+  const data = await call<{ content?: { productList?: Raw[] }[] }>(`/product/listV2?${q}`, { method: "GET", token: tk });
+  const list = (data.content ?? []).flatMap((c) => c.productList ?? []);
+  return list.map((r) => ({
+    pid: r.id,
+    name: r.nameEn ?? "",
+    image: r.bigImage ?? "",
+    sellPriceUsd: Number(String(r.nowPrice ?? r.sellPrice ?? "0").split(/[-~]/)[0]) || 0,
+    listedNum: r.listedNum ?? 0,
+    inventory: r.warehouseInventoryNum ?? 0,
+    category: r.threeCategoryName ?? "",
+  }));
+}
+
+export type CJVariantInfo = { vid: string; name: string; image: string; priceUsd: number; sku: string };
+
+/** GET /product/variant/query?pid= : variantes d'un produit (identifiant vid, prix d'achat en dollars). */
+export async function variantsOf(pid: string): Promise<CJVariantInfo[]> {
+  const tk = await token();
+  type Raw = { vid: string; variantNameEn?: string; variantImage?: string; variantSellPrice?: number | string; variantSku?: string };
+  const list = await call<Raw[]>(`/product/variant/query?pid=${encodeURIComponent(pid)}`, { method: "GET", token: tk });
+  return (list ?? []).map((v) => ({ vid: v.vid, name: v.variantNameEn ?? "", image: v.variantImage ?? "", priceUsd: Number(v.variantSellPrice) || 0, sku: v.variantSku ?? "" }));
+}
+
+/** Adresse publique d'un produit CJ (reconnue ensuite par pidFromUrl). */
+export const cjProductUrl = (pid: string, name = "produit") =>
+  `https://cjdropshipping.com/product/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "produit"}-p-${pid}.html`;

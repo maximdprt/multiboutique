@@ -8,6 +8,8 @@ import { hasClaude, S, structured } from "./claude";
 import type { Ctx } from "./run";
 import { pingIndexNow } from "../indexnow";
 import { siteUrl } from "../sites";
+import { hasCJ } from "../suppliers/cj";
+import { sourceProduct } from "./catalog";
 
 // ---------- Étape 1 : propositions ----------
 export type Palette = { label: string; background: string; ink: string; primary: string; accent: string; font: "serif" | "grotesk" | "kanit" };
@@ -91,6 +93,8 @@ type GenProduct = {
   cost_estimate_eur: number;
   supplier: string;
   supplier_url: string;
+  /** Mots-clés anglais pour retrouver le produit dans le catalogue CJ */
+  supplier_keywords_en?: string;
   seo_title: string;
   seo_description: string;
 };
@@ -129,6 +133,7 @@ const SITE_TOOL = {
         cost_estimate_eur: S.num("Coût d'achat fournisseur estimé, livraison comprise"),
         supplier: S.str("Plateforme fournisseur (CJ Dropshipping, BigBuy, AliExpress…)"),
         supplier_url: S.str("URL de la fiche fournisseur trouvée, ou vide"),
+        supplier_keywords_en: S.str("2 à 5 mots-clés anglais pour retrouver ce produit dans le catalogue CJ Dropshipping, ex. « cat water fountain silent »"),
         seo_title: S.str("Titre Google de 55 caractères maximum"),
         seo_description: S.str("Description Google de 150 caractères environ"),
       }),
@@ -242,6 +247,17 @@ Cherche pour chaque produit une fiche chez un fournisseur dropshipping qui livre
   }
   if (saved[0]) await db.saveSite({ ...site, hero_product_id: saved[0].id });
   ctx.log(`${saved.length} fiches produits enregistrées.`);
+
+  // 1 bis. Agent Catalogue + agent Images : produit réel chez CJ, prix d'achat, photos contrôlées et rangées chez nous
+  if (hasCJ()) {
+    ctx.log("Recherche des produits chez CJ et récupération des photos…");
+    let withImages = 0;
+    for (const [i, p] of saved.entries()) {
+      const r = await sourceProduct(p, gen.products?.[i]?.supplier_keywords_en ?? "", ctx.log);
+      if (r.images) withImages++;
+    }
+    ctx.log(`${withImages} produit(s) sur ${saved.length} avec des photos du fournisseur.`);
+  } else ctx.log("Sans CJ_API_KEY : les photos sont à ajouter dans chaque fiche produit (section Images).");
 
   // 2. Guides
   let guidesCount = 0;

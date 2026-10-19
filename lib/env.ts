@@ -49,6 +49,7 @@ export const ENV_FIELDS = {
   CJ_PAY_MODE: opt(z.enum(["balance", "manual"], { error: "Mettez balance ou manual." })),
   AUTO_FULFILL_MAX_CENTS: opt(re(/^\d+$/, "Un nombre entier de centimes, ex. 15000 pour 150 €.")),
   AUTO_FULFILL: bool,
+  EUR_PER_USD: opt(re(/^\d+(\.\d+)?$/, "Un nombre avec un point, ex. 0.92.")),
 
   TELEGRAM_BOT_TOKEN: opt(re(/^\d+:[\w-]{20,}$/, "Format attendu : 123456789:ABC… (donné par @BotFather).")),
   TELEGRAM_CHAT_ID: opt(re(/^-?\d+$/, "Un nombre (éventuellement négatif pour un groupe).")),

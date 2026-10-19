@@ -5,8 +5,12 @@ import { euros } from "@/lib/format";
 import { siteUrl } from "@/lib/sites";
 import type { Product } from "@/lib/types";
 import { deleteProduct, saveProduct } from "../../../actions";
+import { ImagesPanel } from "./ImagesPanel";
 
-type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; site?: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; site?: string; images?: string }> };
+
+// la récupération des images (téléchargements, CJ limité à 1 requête par seconde) peut prendre une minute
+export const maxDuration = 120;
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
@@ -45,6 +49,7 @@ export default async function ProductEdit({ params, searchParams }: Props) {
         </div>
       </div>
       {sp.ok && <p className="flash">Produit enregistré. La boutique est à jour.</p>}
+      {p && <ImagesPanel p={p} message={sp.images} />}
 
       <form action={saveProduct} className="panel">
         {p && <input type="hidden" name="id" value={p.id} />}
@@ -139,14 +144,19 @@ export default async function ProductEdit({ params, searchParams }: Props) {
           </div>
         </div>
 
-        <div className="form-section">
-          <h2>Photos</h2>
-          <p>Une adresse d&apos;image par ligne, la première est la photo principale. Utilisez vos propres photos ou des photos libres de droits.</p>
-          <label className="field">
-            <span>Adresses des images</span>
-            <textarea name="images" rows={3} defaultValue={p?.images.join("\n")} placeholder="https://…/photo-1.jpg" />
-          </label>
-        </div>
+        {p ? (
+          // La galerie se gère dans la section Images ci-dessus
+          <input type="hidden" name="images" value={p.images.join("\n")} />
+        ) : (
+          <div className="form-section">
+            <h2>Photos</h2>
+            <p>Une adresse d&apos;image par ligne. Après la création, la section Images permet de récupérer les photos du fournisseur, de les contrôler et de les ranger chez nous.</p>
+            <label className="field">
+              <span>Adresses des images</span>
+              <textarea name="images" rows={3} placeholder="https://…/photo-1.jpg" />
+            </label>
+          </div>
+        )}
 
         <div className="form-section">
           <h2>Contenu de la fiche</h2>

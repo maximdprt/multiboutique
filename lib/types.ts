@@ -178,6 +178,31 @@ export type NewOrder = Omit<Order, "id" | "number" | "created_at" | "updated_at"
   created_at?: string;
 };
 
+// ---------- Médias ----------
+export type MediaSource = "cj" | "url" | "upload" | "demo";
+
+export type Media = {
+  id: string;
+  site_id: string;
+  product_id: string | null;
+  url: string;
+  path: string;
+  width: number;
+  height: number;
+  bytes: number;
+  alt: string;
+  source: MediaSource;
+  source_url: string;
+  /** Qualité mesurée par l'agent Images, de 0 à 100 */
+  score: number;
+  /** Empreinte visuelle (64 bits en hexadécimal) : deux images presque identiques ont une empreinte proche */
+  hash: string;
+  /** Traitements appliqués : « agrandie », « mise au carré »… */
+  notes: string[];
+  position: number;
+  created_at: string;
+};
+
 // ---------- Agents ----------
 export type Opportunity = {
   id: string;
@@ -198,7 +223,7 @@ export type Opportunity = {
   site_id: string | null;
 };
 
-export type AgentKind = "veille" | "construction" | "contenu" | "commandes" | "rapport" | "domaines";
+export type AgentKind = "veille" | "construction" | "contenu" | "commandes" | "rapport" | "domaines" | "images";
 
 export type AgentRun = {
   id: string;

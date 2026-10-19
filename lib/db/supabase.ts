@@ -2,7 +2,7 @@
 // SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont définies.
 // La clé "service role" reste côté serveur : elle n'est jamais envoyée au navigateur.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { AgentRun, AnalyticsDay, Guide, NewOrder, Opportunity, Order, Product, Report, Site, TrackInput } from "../types";
+import type { AgentRun, AnalyticsDay, Guide, Media, NewOrder, Opportunity, Order, Product, Report, Site, TrackInput } from "../types";
 import type { Db } from "./types";
 
 let client: SupabaseClient | null = null;
@@ -163,6 +163,20 @@ export const supabaseDb: Db = {
   },
   async listReports(limit = 30) {
     return check(await sb().from("reports").select("*").order("day", { ascending: false }).limit(limit)) as Report[];
+  },
+  async listMedia(opts = {}) {
+    let q = sb().from("media").select("*").order("position").order("created_at");
+    if (opts.siteId) q = q.eq("site_id", opts.siteId);
+    if (opts.productId) q = q.eq("product_id", opts.productId);
+    return check(await q) as Media[];
+  },
+  async saveMedia(m) {
+    const row = { ...m };
+    if (!row.id) delete row.id;
+    return check(await sb().from("media").upsert(row).select().single()) as Media;
+  },
+  async deleteMedia(id) {
+    check(await sb().from("media").delete().eq("id", id));
   },
   async getSetting<T>(key: string) {
     const row = check(await sb().from("settings").select("value").eq("key", key).maybeSingle()) as { value: T } | null;

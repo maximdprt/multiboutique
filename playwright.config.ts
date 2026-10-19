@@ -28,7 +28,7 @@ const DEMO_ENV = Object.fromEntries(
   ].map((k) => [k, ""]),
 );
 
-const reset = `node -e "require('fs').rmSync('.data/e2e-db.json',{force:true})"`;
+const reset = `node -e "const fs=require('fs');fs.rmSync('.data/e2e-db.json',{force:true});fs.rmSync('.data/e2e-medias',{recursive:true,force:true})"`;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -52,6 +52,6 @@ export default defineConfig({
     url: `http://localhost:${PORT}/admin/login`,
     reuseExistingServer: false,
     timeout: 240_000,
-    env: { ...DEMO_ENV, DEMO_DB_PATH: ".data/e2e-db.json", NODE_ENV: "production" },
+    env: { ...DEMO_ENV, DEMO_DB_PATH: ".data/e2e-db.json", DEMO_MEDIA_DIR: ".data/e2e-medias", NODE_ENV: "production" },
   },
 });

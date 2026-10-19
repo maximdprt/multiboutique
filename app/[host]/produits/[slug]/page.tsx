@@ -5,8 +5,11 @@ import { siteFromHost, siteUrl } from "@/lib/sites";
 import { money } from "@/lib/format";
 import { RichText, plainText, truncate } from "@/lib/richtext";
 import { JsonLd, breadcrumbLd, faqLd, productLd } from "@/lib/seo";
-import { Price, ProductImage, ProductTile } from "@/components/ProductBits";
+import { Price, ProductTile } from "@/components/ProductBits";
 import { AddToCart } from "@/components/AddToCart";
+import { Gallery } from "@/components/Gallery";
+import { StickyBuy } from "@/components/StickyBuy";
+import { galleryOf } from "@/lib/images/gallery";
 import { StoreLink } from "@/components/store";
 
 type Props = { params: Promise<{ host: string; slug: string }> };
@@ -39,10 +42,12 @@ export default async function ProductPage({ params }: Props) {
   if (!data) notFound();
   const { site, product: p } = data;
 
-  const [all, guides] = await Promise.all([
+  const [all, guides, gallery] = await Promise.all([
     db.listProducts({ siteId: site.id, activeOnly: true }),
     db.listGuides({ siteId: site.id, publishedOnly: true }),
+    galleryOf(p),
   ]);
+  const cartItem = { id: p.id, slug: p.slug, title: p.title, price_cents: p.price_cents, image: p.images[0] ?? "", max: p.stock };
   const related = all.filter((x) => x.id !== p.id && x.category === p.category).concat(all.filter((x) => x.id !== p.id && x.category !== p.category)).slice(0, 3);
   const linkedGuides = guides.filter((g) => g.product_ids.includes(p.id));
   const free = site.shipping.free_from_cents > 0;
@@ -75,29 +80,14 @@ export default async function ProductPage({ params }: Props) {
         </nav>
 
         <div className="pdp">
-          <div className="gallery">
-            <div className="media">
-              <ProductImage src={p.images[0]} alt={p.title} sizes="(max-width: 860px) 100vw, 620px" priority />
-            </div>
-            {p.images.length > 1 && (
-              <div className="thumbs">
-                {p.images.slice(1, 6).map((src, i) => (
-                  <div className="media" key={src}>
-                    <ProductImage src={src} alt={`${p.title}, vue ${i + 2}`} sizes="76px" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <Gallery title={p.title} images={gallery.map((m) => ({ src: m.url, alt: m.alt || p.title, width: m.width, height: m.height }))} />
 
           <div className="buy">
             <h1>{p.title}</h1>
             {p.subtitle && <p className="sub">{p.subtitle}</p>}
             <Price p={p} />
             {p.stock !== null && p.stock > 0 && p.stock <= 5 && <p className="stock-note">Plus que {p.stock} en stock</p>}
-            <AddToCart
-              product={{ id: p.id, slug: p.slug, title: p.title, price_cents: p.price_cents, image: p.images[0] ?? "", max: p.stock }}
-            />
+            <AddToCart product={cartItem} />
             {p.highlights.length > 0 && (
               <ul className="highlights">
                 {p.highlights.map((h) => (
@@ -105,10 +95,32 @@ export default async function ProductPage({ params }: Props) {
                 ))}
               </ul>
             )}
-            <p className="ship-note">
-              Livraison en {site.shipping.delay}
-              {free ? `, offerte dès ${money(site.shipping.free_from_cents)}` : ""}. Retours sous {site.return_days} jours.
-            </p>
+            <ul className="trust" aria-label="Livraison, retours et paiement">
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" />
+                  <circle cx="7" cy="17.5" r="1.8" />
+                  <circle cx="17" cy="17.5" r="1.8" />
+                </svg>
+                <span>
+                  Livraison en {site.shipping.delay}
+                  {free ? `, offerte dès ${money(site.shipping.free_from_cents)}` : ""}
+                </span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4" />
+                </svg>
+                <span>Retours sous {site.return_days} jours</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="10" width="16" height="10" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+                <span>Paiement sécurisé par Stripe</span>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -184,6 +196,7 @@ export default async function ProductPage({ params }: Props) {
           </section>
         )}
       </div>
+      <StickyBuy product={cartItem} />
     </>
   );
 }

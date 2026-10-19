@@ -13,7 +13,7 @@ export function AddToCart({ product }: { product: Omit<CartItem, "qty"> }) {
 
   return (
     <>
-      <div className="add">
+      <div className="add" id="achat">
         <div className="qty" role="group" aria-label="Quantité">
           <button type="button" aria-label="Retirer un" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={soldOut}>
             −

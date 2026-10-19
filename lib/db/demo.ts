@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
-import type { AgentRun, AnalyticsDay, Guide, NewOrder, Opportunity, Order, Product, Report, Site, TrackInput } from "../types";
+import type { AgentRun, AnalyticsDay, Guide, Media, NewOrder, Opportunity, Order, Product, Report, Site, TrackInput } from "../types";
 import type { Db, OrderFilter } from "./types";
 import { DEMO_GUIDES, DEMO_OPPORTUNITIES, DEMO_PRODUCTS, DEMO_SITES, generateDemoAnalytics, generateDemoOrders } from "./seed";
 
@@ -18,6 +18,7 @@ type State = {
   analytics: AnalyticsDay[];
   reports: Report[];
   settings: Record<string, unknown>;
+  media: Media[];
 };
 
 const FILE =
@@ -36,6 +37,7 @@ function load(): State {
     g.__demoState.reports ??= [];
     g.__demoState.settings ??= {};
     g.__demoState.runs ??= [];
+    g.__demoState.media ??= [];
   } catch {
     const orders = generateDemoOrders();
     g.__demoState = {
@@ -48,6 +50,7 @@ function load(): State {
       analytics: generateDemoAnalytics(orders),
       reports: [],
       settings: {},
+      media: [],
     };
     persist();
   }
@@ -275,6 +278,44 @@ export const demoDb: Db = {
   },
   async listReports(limit = 30) {
     return clone([...load().reports].sort((a, b) => b.day.localeCompare(a.day)).slice(0, limit));
+  },
+  async listMedia(opts = {}) {
+    return clone(
+      load()
+        .media.filter((m) => (!opts.siteId || m.site_id === opts.siteId) && (!opts.productId || m.product_id === opts.productId))
+        .sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at)),
+    );
+  },
+  async saveMedia(m) {
+    const st = load();
+    const existing = m.id ? st.media.find((x) => x.id === m.id) : undefined;
+    const row: Media = existing
+      ? Object.assign(existing, m)
+      : {
+          id: crypto.randomUUID(),
+          product_id: null,
+          path: "",
+          width: 0,
+          height: 0,
+          bytes: 0,
+          alt: "",
+          source: "upload",
+          source_url: "",
+          score: 0,
+          hash: "",
+          notes: [],
+          position: 0,
+          created_at: now(),
+          ...m,
+        };
+    if (!existing) st.media.push(row);
+    persist();
+    return clone(row);
+  },
+  async deleteMedia(id) {
+    const st = load();
+    st.media = st.media.filter((m) => m.id !== id);
+    persist();
   },
   async getSetting<T>(key: string) {
     return clone((load().settings[key] as T) ?? null);

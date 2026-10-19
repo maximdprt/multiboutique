@@ -1,4 +1,4 @@
-import type { AgentRun, AnalyticsDay, Guide, NewOrder, Opportunity, Order, OrderStatus, Product, Report, Site, TrackInput } from "../types";
+import type { AgentRun, AnalyticsDay, Guide, Media, NewOrder, Opportunity, Order, OrderStatus, Product, Report, Site, TrackInput } from "../types";
 
 export type OrderFilter = {
   siteId?: string;
@@ -52,6 +52,10 @@ export interface Db {
 
   saveReport(r: Omit<Report, "id" | "created_at">): Promise<Report>;
   listReports(limit?: number): Promise<Report[]>;
+
+  listMedia(opts?: { siteId?: string; productId?: string }): Promise<Media[]>;
+  saveMedia(m: Partial<Media> & Pick<Media, "site_id" | "url">): Promise<Media>;
+  deleteMedia(id: string): Promise<void>;
 
   getSetting<T = unknown>(key: string): Promise<T | null>;
   setSetting(key: string, value: unknown): Promise<void>;

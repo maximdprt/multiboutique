@@ -2,6 +2,26 @@
 
 Les choix techniques faits en cours de route, avec leur raison. Le plus récent en haut.
 
+## Agent Images (19 octobre 2026)
+
+**Sources autorisées seulement : fournisseur, adresses fournies par le propriétaire, ses envois.**
+L'agent prend les photos du produit chez CJ (API officielle, `GET /product/query` : `bigImage` puis `productImageSet`, photo de la variante vendue en premier ; images de la description seulement si la galerie en a moins de 3, car elles portent souvent du texte publicitaire). Jamais de photos d'une autre boutique. Point à vérifier par le propriétaire : les conditions de CJ sur la réutilisation de ses photos n'ont pas pu être lues (page protégée contre les robots) ; l'usage courant est qu'elles servent à revendre le produit.
+
+**Qualité mesurée sur l'image elle-même, sans service payant (sharp).**
+Résolution (40 points, 1200 px conseillés, refus sous 500 px), netteté (25, variance du laplacien), cadrage (15, proche du carré), fond (20, bords unis). Refus des images floues, trop petites ou en bannière. Doublons repérés par une empreinte dHash 16×16 (256 bits) : mesurée sur nos images de test, une même photo redimensionnée ou recompressée diffère de 0 à 2 bits, deux photos différentes d'au moins 14 ; seuil fixé à 8. Une grille 8×8 confondait des photos différentes sur fond blanc (les tests l'ont montré).
+
+**Traitement : redressée, mise au carré si le fond est uni (en prolongeant ce fond), agrandie à 1200 px au moins, WebP qualité 84, 2000 px au plus.**
+La mise au carré ne recadre jamais le produit ; une photo d'ambiance (fond chargé) garde son cadrage. L'agrandissement (Lanczos + léger renforcement) n'invente pas de détails : une image de 500 px restera moins nette qu'une vraie photo de 1200 px, d'où la note de qualité affichée.
+
+**Images rangées chez nous (Supabase Storage, bucket public « medias »), jamais liées chez le fournisseur.**
+Les adresses des fournisseurs changent ou expirent : une image liée finit par casser. Les transformations d'images de Supabase sont payantes (offre Pro) : tout est donc préparé avant l'envoi, et Next.js sert ensuite les tailles adaptées (AVIF/WebP). Une tâche quotidienne (`/api/cron/images`, 5 h 30 à Paris) vérifie que chaque image répond, rapatrie celles encore hébergées ailleurs, récupère à nouveau celles qui ont disparu depuis leur source.
+
+**CJ : 1 requête par seconde au plus.**
+C'est la limite du compte gratuit (au-delà : erreur 429) ; le client CJ espace ses appels de 1,1 s. Depuis l'été 2026, CJ compte aussi des « points » par jour (50 000 ; 10 par fiche produit, 50 par recherche) : largement suffisant. Attention : 30 jours sans aucune commande CJ suspendent l'accès à l'API (réactivable sur la page API de CJ).
+
+**Agent Catalogue (`lib/agents/catalog.ts`) : relie chaque produit d'une nouvelle boutique à un produit réel chez CJ.**
+Recherche par mots-clés anglais (`GET /product/listV2`), choix du produit en stock le plus référencé par d'autres vendeurs dont le coût laisse une marge (≤ 40 % du prix de vente), variante (`GET /product/variant/query`), prix d'achat converti avec `EUR_PER_USD` (0,92 par défaut), puis agent Images. Sans `CJ_API_KEY`, il ne fait rien.
+
 ## Gabarit « Studio » (19 octobre 2026)
 
 **Les boutiques créées par l'agent utilisent le gabarit Studio, inspiré du modèle de portfolio 3D fourni par le propriétaire.**

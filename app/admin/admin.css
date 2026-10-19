@@ -1876,3 +1876,83 @@ tbody tr.link a {
   text-overflow: ellipsis;
   vertical-align: middle;
 }
+
+/* ---------- Galerie d'images d'un produit ---------- */
+.img-grid {
+  list-style: none;
+  margin: 0;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+.img-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 8px;
+  display: grid;
+  gap: 8px;
+  background: var(--card);
+}
+.img-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--sub);
+}
+.img-thumb img {
+  object-fit: contain;
+}
+.img-main {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}
+.img-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 0.8rem;
+}
+.img-alt {
+  display: flex;
+  gap: 6px;
+}
+.img-alt input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.img-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.img-add {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+}
+.img-add-box {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.img-add-box h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+.img-add-box p,
+.img-add-box small {
+  font-size: 0.84rem;
+  margin: 0;
+}
+.img-add-box .btn {
+  justify-self: start;
+}
